@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#Copy to /etc/profile.d/
-
 if [ ! -f /tmp/.loggedin ]
 then
     id=$(id -u $user)

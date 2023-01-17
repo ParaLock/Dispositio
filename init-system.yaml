@@ -1,0 +1,81 @@
+- hosts: "all"
+  gather_facts: yes
+  vars:
+    kit_path: "/home/{{ansible_user}}/disposito_kit"
+    run_script: |
+      PYTHONPATH={{kit_path}}/ansible/lib/ sudo python3 {{kit_path}}/ansible/bin/ansible-playbook -i {{kit_path}}/inventory.yaml {{kit_path}}/run.yml --ask-become-pass -u {{ansible_user}}
+  tasks:
+    
+    - name: Creates kit directory
+      file:
+        path: "{{kit_path}}"
+        state: directory
+      args:
+        creates: {{kit_path}}
+
+    - name: Build run script
+      copy:
+        content: "{{ run_script }}"
+        dest: "{{kit_path}}/run.sh"
+        mode: 0777
+      args:
+        creates: {{kit_path}}/run.sh
+
+    - name: Install ansible if not present
+      shell: |
+        git clone https://github.com/ansible/ansible -b devel ./ansible
+      args:
+        chdir: "{{kit_path}}"
+        creates: ansible
+
+    - name: Get user id (raw)
+      shell: id -u {{ ansible_user }}
+      register: raw_user_id
+
+    - name: Get user id
+      set_fact: 
+        user_id: "{{raw_user_id.stdout_lines[0]}}"
+
+    - name: Set DBUS path
+      become_user: root
+      become: true
+      become_method: sudo
+      lineinfile:
+        path: /etc/environment
+        line: "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
+        state: present
+
+    - name: Set DBUS path
+      become_user: root
+      become: true
+      become_method: sudo
+      lineinfile:
+        path: /etc/profile
+        line: "{{kit_path}}/run.sh"
+        state: present
+
+    - name: Disable getty
+      become: true
+      systemd:
+        name: getty@{{item}}.service
+        state: stopped
+        masked: true
+      ignore_errors: true
+      with_items:
+        - 1
+        - 2
+        - 3
+        - 4
+
+    - name: Disable logind
+      systemd:
+        name: systemd-logind.service 
+        state: stopped
+        masked: true
+
+    - name: Start user service
+      systemd:
+        name: "user@{{ user_id }}"
+        state: started
+
+

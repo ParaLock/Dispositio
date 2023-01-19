@@ -2,8 +2,31 @@
   gather_facts: yes
   vars:
     kit_path: "/home/{{ansible_user}}/disposito_kit"
-    run_script: |
-      PYTHONPATH={{kit_path}}/ansible/lib/ sudo python3 {{kit_path}}/ansible/bin/ansible-playbook -i {{kit_path}}/inventory.yaml {{kit_path}}/run.yml --ask-become-pass -u {{ansible_user}}
+    
+    init_service: |
+      [Unit]
+      Description = Disposito Service
+
+      [Service]
+      StandardError=journal
+      User={{ansible_user}}
+      ExecStart=ansible-playbook -i {{kit_path}}/inventory.yaml -u {{ansible_user}} {{kit_path}}/init-system.yaml
+
+      [Install]
+      WantedBy=multi-user.target
+
+    login_service: |
+      [Unit]
+      Description = Login Service
+
+      [Service]
+      StandardError=journal
+      User={{ansible_user}}
+      ExecStart=/bin/bash --login
+
+      [Install]
+      WantedBy=multi-user.target
+  
   tasks:
     
     - name: Creates kit directory
@@ -11,22 +34,29 @@
         path: "{{kit_path}}"
         state: directory
       args:
-        creates: {{kit_path}}
+        creates: "{{kit_path}}"
+
+    - name: Copy kit files
+      copy:
+        src: "{{ item }}"
+        dest: "/home/{{ansible_user}}/disposito_kit/"
+        owner: "{{ ansible_user }}"
+        mode: 0777
+      with_fileglob:
+        - "{{playbook_dir}}/*.yaml"
 
     - name: Build run script
+      
+      become: true
+      become_user: root
+      become_method: sudo
+
       copy:
-        content: "{{ run_script }}"
-        dest: "{{kit_path}}/run.sh"
+        content: "{{ init_service }}"
+        dest: "/etc/systemd/system/disposito.service"
         mode: 0777
       args:
-        creates: {{kit_path}}/run.sh
-
-    - name: Install ansible if not present
-      shell: |
-        git clone https://github.com/ansible/ansible -b devel ./ansible
-      args:
-        chdir: "{{kit_path}}"
-        creates: ansible
+        creates: "/etc/systemd/system/disposito.service"
 
     - name: Get user id (raw)
       shell: id -u {{ ansible_user }}
@@ -36,22 +66,15 @@
       set_fact: 
         user_id: "{{raw_user_id.stdout_lines[0]}}"
 
-    - name: Set DBUS path
-      become_user: root
-      become: true
-      become_method: sudo
-      lineinfile:
-        path: /etc/environment
-        line: "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
-        state: present
+    - name: Create bash login if it does not exist
+      command: "touch /home/{{ansible_user}}/.bash_login"
+      args:
+        creates: /home/{{ansible_user}}/.bash_login
 
     - name: Set DBUS path
-      become_user: root
-      become: true
-      become_method: sudo
       lineinfile:
-        path: /etc/profile
-        line: "{{kit_path}}/run.sh"
+        path: /home/{{ansible_user}}/.bash_login
+        line: "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
         state: present
 
     - name: Disable getty

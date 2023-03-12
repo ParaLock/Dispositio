@@ -1,0 +1,54 @@
+- name: set image dir path
+  set_fact:
+    image_dir_path: "{{role_path}}"
+
+- name: set rootfs path
+  set_fact:
+    rootfs_path: "{{image_dir_path}}/arch-rootfs"
+
+- name: Create root dir
+  file:
+    path: "{{rootfs_path}}"
+    state: directory
+    mode: '0777'
+
+- name: Enable exec permissions on pacstrap
+  copy:
+    src: "{{config_path}}/pacstrap"
+    dest: "{{config_path}}/pacstrap"
+    mode: a+x
+
+- name: Mount tmpfs
+  shell: "mount -t tmpfs -o size=1000m tmpfs {{rootfs_path}}"
+
+- name: Build rootfs
+  shell: |
+    {{config_path}}/pacstrap -c {{rootfs_path}} base coreutils sed gzip
+    
+    echo base_container > {{rootfs_path}}/etc/hostname
+    cp /usr/share/zoneinfo/UTC {{rootfs_path}}/etc/localtime
+
+    echo "en_GB.UTF-8 UTF-8" > {{rootfs_path}}/etc/locale.gen
+    echo "en_US.UTF-8 UTF-8" > {{rootfs_path}}/etc/locale.gen
+    echo "LANG=en_GB.UTF-8"  > {{rootfs_path}}/etc/locale.conf
+    echo "LC_MESSAGES=C"     > {{rootfs_path}}/etc/locale.conf
+
+- name: Build locals
+  shell: |
+    arch-chroot {{rootfs_path}} sh -c '/usr/bin/locale-gen'
+
+- name:  Manage container image
+  shell: |
+    tar --numeric-owner --xattrs --acls -C "{{rootfs_path}}" -c . | 
+      podman import - nmercaldo/archlinux_base
+
+- name: unmount rootfs dir
+  ansible.posix.mount:
+    path: "{{rootfs_path}}"
+    state: unmounted
+
+- name: delete rootfs dir
+  file:
+    path: "{{rootfs_path}}"
+    state: absent
+

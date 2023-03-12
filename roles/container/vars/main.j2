@@ -1,0 +1,67 @@
+arguments:
+  mount:
+    - "mount=type=bind,src=/dev/shm,dst=/dev/shm"
+  device:
+    - "/dev/input:/dev/input:rwm"
+    - "/dev/dri:/dev/dri:rwm"
+    {% if sound == 'pulse' or sound == 'pipewire' %}
+    - "/dev/snd:/dev/snd:rwm"
+    {% endif %}
+    {% if gpu == 'nvidia' %}
+    - "/dev/nvidiactl:/dev/nvidiactl:rwm"
+    - "/dev/nvidia-modeset:/dev/nvidia-modeset:rwm"
+    - "/dev/nvidia0:/dev/nvidia0:rwm"
+    - "/dev/nvidia-uvm:/dev/nvidia-uvm:rwm"
+    - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools:rwm"
+    {% endif %}
+    - "/dev/fuse:/dev/fuse:rwm"
+  cap_add:
+    - CAP_SYS_ADMIN
+    - SYS_NICE
+    - CAP_SYS_TTY_CONFIG
+    - DAC_READ_SEARCH
+    - CAP_SYS_RAWIO
+    - CAP_MKNOD
+    - CAP_SYS_RESOURCE
+    - BPF
+    - NET_ADMIN
+    - NET_RAW
+  security_opt:
+    - label=disable
+    - seccomp=unconfined
+  volume:
+    {% if nested_containers %}
+    - "/var/run/containers/storage:/var/run/containers/storage"
+    - "/var/lib/containers/storage:/var/lib/containers/storage"
+    - "/sys/fs/fuse/connections:/sys/fs/fuse/connections"
+    {% endif %}
+    {% if graphics == 'host-xserver' %}
+    - "/tmp/.X11-unix/:/mnt/.X11-unix/"
+    {% endif %}
+    {% if sound == 'pipewire' %}
+    - "/run/user/1000/pipewire-0:/mnt/pipewire-0"
+    {% endif %}
+  cmd_args:
+    - --device-cgroup-rule="a 1:* rmw"
+    - --device-cgroup-rule="a 13:* rmw"
+    - --device-cgroup-rule="a 116:* rmw"
+    - --device-cgroup-rule="a 226:* rmw"
+    - --device-cgroup-rule="a 4:* rmw"
+    - --device-cgroup-rule="a 195:* rmw"
+    - --device-cgroup-rule="a 511:* rmw"
+    - --device-cgroup-rule="a 236:* rmw"
+    - --device-cgroup-rule="a 259:* rmw"
+  {% if nested_containers %}
+    - --storage-driver=overlay
+  {% endif %}
+    - --shm-size=16G
+
+{% if operation in ['start'] %}
+image_state: "present"
+container_state: "started" 
+{% endif %}
+
+{% if operation in ['create'] %}
+image_state: "build"
+container_state: "started" 
+{% endif %}

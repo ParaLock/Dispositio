@@ -1,0 +1,28 @@
+- hosts: localhost
+  connection: local
+  become: yes
+  become_user: root
+  gather_facts: yes
+  roles:
+
+    - role: container
+      container_name: "{{container_name}}"
+      config_path: "{{playbook_dir}}/config/"
+      image_name: archlinux_full
+      graphics: x-server
+      sound: pipewire
+      nested_containers: false
+      gpu: nvidia
+      copy_host_user: true
+      container_username: "linuxdev"
+      host_user: "linuxdev"
+      hooks:
+        on_build: "{{playbook_dir}}/playbooks/build_base_image.yaml"
+        on_start: "{{playbook_dir}}/playbooks/start_container.yaml"
+        on_create: "{{playbook_dir}}/playbooks/init_container.yaml"
+  tasks:
+    - name:
+      debug:
+        msg: "Done managing container"
+
+

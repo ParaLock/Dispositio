@@ -1,0 +1,4 @@
+- name: Run routine startup tasks
+  shell: |
+    # /env-setup.sh
+  delegate_to: "{{container_name}}"

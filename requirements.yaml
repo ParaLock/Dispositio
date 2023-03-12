@@ -1,0 +1,4 @@
+collections:
+  # Install podman stuff
+  - name: https://github.com/ParaLock/ansible-podman-collections.git
+    type: git

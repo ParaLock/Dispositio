@@ -1,11 +1,13 @@
 - name: Bootstrap container
   block:
+
     - name: Configure mirror list
-      shell: |
-        echo '[multilib]' >> /etc/pacman.conf
-        echo 'Include = /etc/pacman.d/mirrorlist' >> /etc/pacman.conf
-        rm /etc/pacman.d/mirrorlist
-        touch /etc/pacman.d/mirrorlist
+      blockinfile:
+        path: /etc/pacman.conf
+        state: present
+        block: |
+          [multilib]
+          Include = /etc/pacman.d/mirrorlist
 
     - name: Copy mirror list
       copy:
@@ -19,7 +21,6 @@
         mode: '0777'
       with_items:
         - env-setup.sh
-        - disable-logind.sh
         - attach-host-xserver.sh
         - start-xserver.sh
 
@@ -32,26 +33,27 @@
         pacman --noconfirm -S sudo
 
     - name: Relax security limits
-      shell: |
-        echo "$user - nice - 20" >> /etc/security/limits.conf
+      lineinfile:
+        path: /etc/security/limits.conf
+        state: present
+        line: "$user - nice - 20"
 
     - name: Setup users
       shell: |
-        
+        useradd -m -G wheel {{container_username}}
         echo "root:root" | chpasswd
         echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
         echo "{{container_username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
         sudo usermod -aG audio {{container_username}}
+      args:
+        creates: /.container_user_created
   
-  become: yes
-  become_user: "root"
   delegate_to: "{{container_name}}"
+  become_user: "root"
+  become: true
 
 - name: Setup system as new user
   block:
-    - name: Disable logind 
-      shell: |
-        /disable-logind.sh
 
     - name: Update base system
       shell: |
@@ -68,32 +70,28 @@
           chdir: "/home/{{container_username}}"
 
     - name: Copy config files
+      become: yes
+      become_user: "root"
       template:
         src: "{{item.src}}"
         dest: "{{item.dest}}"
+        mode: "0777"
       with_items:
         - src: "../config/xorg.conf"
           dest: "/etc/X11/xorg.conf"
         - src: "../config/Xwrapper.config"
           dest: "/etc/X11/Xwrapper.config"
-        - src: "../config/config.ini"
-          dest: "/etc/ly/"
         - src: "../config/xinitrc"
           dest: "/etc/X11/xinit/xinitrc"
         - src: "../config/xserverrc"
           dest: "/etc/X11/xinit/xserverrc"
     
-    - name: Copy files
-      copy:
-        src: "{{item.src}}"
-        dest: "{{item.dest}}"
-      with_items:
-        - src: "../config/ly"
-          dest: "/usr/bin/"
-
     - name: Install packages
+      become: yes
+      become_user: "root"
       shell: "sudo pacman -S --noconfirm {{item}}"
       with_items:
+        - ansible
         - xorg
         - xorg-xinit
         - xterm
@@ -168,5 +166,25 @@
     - name: Enable ly
       shell: sudo systemctl enable ly
 
+    - name: Copy ly config
+      become: yes
+      become_user: "root"
+      template:
+        src: "../config/config.ini"
+        dest: "/etc/ly/config.ini"
+        mode: "0777"
+
+    - name: Copy over ly files
+      become: yes
+      become_user: "root"
+      copy:
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
+      with_items:
+        - src: "../config/ly"
+          dest: "/usr/bin/"
+
+
   become: yes
   become_user: "{{container_username}}"
+  delegate_to: "{{container_name}}"

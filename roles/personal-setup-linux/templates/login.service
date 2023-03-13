@@ -1,0 +1,10 @@
+[Unit]
+Description = Login Service
+
+[Service]
+StandardError=journal
+User={{ansible_user}}
+ExecStart=/bin/bash --login
+
+[Install]
+WantedBy=multi-user.target

@@ -1,58 +1,49 @@
-- hosts: "all"
-  gather_facts: yes
-  vars:
+- name: Set some vars
+  set_fact:
     kit_path: "/home/{{ansible_user}}/disposito_kit"
+
+- name: Creates kit directories
+  file:
+    path: "{{item}}"
+    state: directory
+  args:
+    creates: "{{item}}"
+  with_items:
+    - "{{kit_path}}"
+    - "{{kit_path}}/playbooks"
+    - "{{kit_path}}/files"
     
-    init_service: |
-      [Unit]
-      Description = Disposito Service
-
-      [Service]
-      StandardError=journal
-      User={{ansible_user}}
-      ExecStart=ansible-playbook -i {{kit_path}}/inventory.yaml -u {{ansible_user}} {{kit_path}}/init-system.yaml
-
-      [Install]
-      WantedBy=multi-user.target
-
-    login_service: |
-      [Unit]
-      Description = Login Service
-
-      [Service]
-      StandardError=journal
-      User={{ansible_user}}
-      ExecStart=/bin/bash --login
-
-      [Install]
-      WantedBy=multi-user.target
-
-  tasks:
+- name: Build templates
+  template:
+    src: "{{ item }}"
+    dest: "{{kit_path}}/files/"
+    owner: "{{ ansible_user }}"
+    mode: 0777
+  with_fileglob:
+    - "{{role_path}}/templates/*"
     
-    - name: Creates kit directory
-      file:
-        path: "{{kit_path}}"
-        state: directory
-      args:
-        creates: "{{kit_path}}"
+- name: Copy playbooks
+  template:
+    src: "{{ item }}"
+    dest: "{{kit_path}}/playbooks/"
+    owner: "{{ ansible_user }}"
+    mode: 0777
+  with_fileglob:
+    - "{{role_path}}/playbooks/*"
 
-    - name: Copy kit files
-      copy:
-        src: "{{ item }}"
-        dest: "/home/{{ansible_user}}/disposito_kit/"
-        owner: "{{ ansible_user }}"
-        mode: 0777
-      with_fileglob:
-        - "{{playbook_dir}}/*.yaml"
+- name: Generate run playbook
+  template:
+    src: "{{role_path}}/templates/run-disposito.yaml.jinja"
+    dest: "{{kit_path}}/run-disposito.yaml"
+    owner: "{{ ansible_user }}"
+    mode: 0777
 
-    - name: Build run script
-      
-      become: true
-      become_user: root
-      become_method: sudo
+- name: Setup services
+  block:
 
-      copy:
-        content: "{{ init_service }}"
+    - name: Copy over disposito service
+      template:
+        src: "{{kit_path}}/files/disposito.service"
         dest: "/etc/systemd/system/disposito.service"
         mode: 0777
       args:
@@ -66,39 +57,6 @@
       set_fact: 
         user_id: "{{raw_user_id.stdout_lines[0]}}"
 
-    - name: Create bash login if it does not exist
-      command: "touch /home/{{ansible_user}}/.bash_login"
-      args:
-        creates: /home/{{ansible_user}}/.bash_login
-
-    - name: Set DBUS path
-      lineinfile:
-        path: /home/{{ansible_user}}/.bash_login
-        line: "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
-        state: present
-
-    - name: Disable getty
-      become: true
-      systemd:
-        name: getty@{{item}}.service
-        state: stopped
-        masked: true
-      ignore_errors: true
-      with_items:
-        - 1
-        - 2
-        - 3
-        - 4
-
-    - name: Disable logind
-      systemd:
-        name: systemd-logind.service 
-        state: stopped
-        masked: true
-
-    - name: Start user service
-      systemd:
-        name: "user@{{ user_id }}"
-        state: started
-
-
+  become: true
+  become_user: root
+  become_method: sudo

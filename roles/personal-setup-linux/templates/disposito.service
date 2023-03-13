@@ -1,0 +1,10 @@
+[Unit]
+Description = Disposito Service
+
+[Service]
+StandardError=journal
+User={{ansible_user}}
+ExecStart=ansible-playbook -u {{ansible_user}} {{kit_path}}/run-disposito.yaml
+
+[Install]
+WantedBy=multi-user.target

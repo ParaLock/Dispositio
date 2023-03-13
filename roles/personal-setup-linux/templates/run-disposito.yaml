@@ -1,0 +1,20 @@
+{% for comp in components %}
+
+- name: "Running {{comp}}"
+  include_tasks: "{{kit_path}}/playbooks/{{comp}}.yaml"
+
+{% if 'install_as_service' in comp and comp.install_as_service %}
+
+- name: Copy over {{comp.name}} service
+  template:
+    src: "{{kit_path}}/files/disposito.service"
+    dest: "/etc/systemd/system/disposito.service"
+    mode: 0777
+  args:
+    creates: "/etc/systemd/system/disposito.service"
+
+
+{% endif %}
+
+
+{% endfor %}

@@ -1,0 +1,53 @@
+
+- name: Generate login service
+  template:
+    src: "{{role_path}}/login.service"
+    dest: "/etc/systemd/system/login.service"
+    mode: 0777
+  args:
+    creates: "/etc/systemd/system/login.service"
+  
+- name: Enable login service
+  systemd:
+    name: login
+    state: enable
+
+- name: start login service
+  systemd:
+    name: login
+    state: start
+
+- name: Create bash login if it does not exist
+  command: "touch /home/{{ansible_user}}/.bash_login"
+  args:
+    creates: /home/{{ansible_user}}/.bash_login
+
+- name: Set DBUS path
+  lineinfile:
+    path: /home/{{ansible_user}}/.bash_login
+    line: "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
+    state: present
+
+- name: Disable getty
+  systemd:
+    name: getty@{{item}}.service
+    state: stopped
+    masked: true
+  ignore_errors: true
+  with_items:
+    - 1
+    - 2
+    - 3
+    - 4
+
+- name: Disable logind
+  systemd:
+    name: systemd-logind.service 
+    state: stopped
+    masked: true
+
+- name: Start user service
+  systemd:
+    name: "user@{{ user_id }}"
+    state: started
+

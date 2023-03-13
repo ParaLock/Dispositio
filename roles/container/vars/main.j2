@@ -1,7 +1,11 @@
 arguments:
+  network: host
   mount:
     - "mount=type=bind,src=/dev/shm,dst=/dev/shm"
   device:
+    {% if 'tty' in vars %}
+    - "/dev/tty{{tty}}:/dev/tty{{tty}}:rwm"
+    {% endif %}
     - "/dev/input:/dev/input:rwm"
     - "/dev/dri:/dev/dri:rwm"
     {% if sound == 'pulse' or sound == 'pipewire' %}
@@ -64,4 +68,13 @@ container_state: "started"
 {% if operation in ['create'] %}
 image_state: "build"
 container_state: "started" 
+{% endif %}
+
+{% if operation in ['destroy'] %}
+image_state: "absent"
+container_state: "absent" 
+{% endif %}
+
+{% if operation in ['build_image'] %}
+image_state: "build"
 {% endif %}

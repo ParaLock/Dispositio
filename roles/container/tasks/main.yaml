@@ -21,13 +21,14 @@
     build:
       format: docker
       cache: false
-  when: operation in ['create']
+  when: operation in ['create', 'build_image']
 
 - name: Manage container
   containers.podman.podman_container:
     name:  "{{container_name}}"
     image: "{{image_name}}"
     state: "{{container_state}}"
+    network: "{{arguments.network}}"
     device: "{{arguments.device}}"
     cap_add: "{{arguments.cap_add}}"
     security_opt: "{{arguments.security_opt}}"
@@ -40,42 +41,52 @@
     command: "/usr/sbin/init"
   when: operation in ['create', 'start']
 
+- name: Destroy container
+  containers.podman.podman_container:
+    name:  "{{container_name}}"
+    state: "{{container_state}}"
+  when: operation in ['destroy']
+
 - name: Adding new container to hosts
   add_host:
     name: "{{container_name}}"
-    ansible_user: "root"
-    ansible_become: true
-    ansible_password: "root"
-    ansible_become_password: "root"
-    ansible_become_user: "root"
+    become_ask_pass: True
     ansible_become_flags: "-s -H"
+    ansible_become_method: "sudo"
     ansible_host: "{{container_name}}"
     ansible_connection: podman
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+
   when: operation in ['create']
 
-- name: Copy over host user files
-  copy:
-    src: "{{item}}"
-    dest: "{{item}}"
-    mode: '0777'
-  delegate_to: "{{container_name}}"
-  when: "'copy_host_user' in vars and operation in ['create']"
-  with_items:
-    - "/etc/group"
-    - "/etc/passwd"
-    - "/etc/shadow"
+- name: Copy over host files
+  block:
 
-- name: Remove host user from host files
-  lineinfile:
-    path: "{{item}}"
-    regexp: "^{{host_user}}.+" 
-    state: absent
+    - name: Copy over host user files
+      copy:
+        src: "{{item}}"
+        dest: "{{item}}"
+        mode: '0777'
+      when: "'copy_host_user' in vars and operation in ['create']"
+      with_items:
+        - "/etc/group"
+        - "/etc/passwd"
+        - "/etc/shadow"
+
+    - name: Remove host user from host files
+      lineinfile:
+        path: "{{item}}"
+        regexp: "^{{host_user}}.+" 
+        state: absent
+      with_items:
+      - "/etc/group"
+      - "/etc/passwd"
+      - "/etc/shadow"
+      when: "'copy_host_user' in vars and operation in ['create']"
+  
   delegate_to: "{{container_name}}"
-  with_items:
-  - "/etc/group"
-  - "/etc/passwd"
-  - "/etc/shadow"
-  when: "'copy_host_user' in vars and operation in ['create']"
+  become_user: "root"
+  become: true
 
 - name: Running on create hook
   include_tasks: "{{hooks['on_create']}}"

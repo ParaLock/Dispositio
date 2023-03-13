@@ -27,20 +27,19 @@
       debug:
         msg: "Done managing container"
 
-# - hosts: "{{container_name}}"
-#   connection: podman
-#   become: yes
-#   become_user: root
-#   gather_facts: yes
-#   roles:
+- hosts: "{{container_name}}"
+  connection: podman
+  become: yes
+  become_user: root
+  gather_facts: yes
+  roles:
 
-#     - role: personal-setup-linux
-#       components:
-#         - name: init-system
-#         - install_as_service: true 
+    - role: personal-setup-linux
+      components:
+        - name: init-system
 
-#   tasks:
-#     - name:
-#       debug:
-#         msg: "Done setting up misc stuff"
+  tasks:
+    - name:
+      debug:
+        msg: "Done setting up misc stuff"
 

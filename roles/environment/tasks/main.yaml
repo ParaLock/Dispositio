@@ -1,0 +1,65 @@
+- name: Set kit directory
+  set_fact:
+    kit_path: "/home/{{username}}/disposito_kit"
+
+- name: Find environment files
+  find:
+    paths: "{{role_path}}/systems/{{system}}/"
+    patterns: "*"
+    recurse: true
+  register: files
+  delegate_to: "localhost"
+
+- name: Create directory structure
+  vars:
+    file_path: '{{ item.path | replace(role_path, "") }}'
+    file_name: '{{file_path | basename}}'
+  file:
+    path: "{{kit_path}}/{{file_path | replace(file_name, '')}}"
+    state: directory
+    mode: 0777
+  with_items: "{{ files.files }}"
+
+# -------------- Handle components --------------- #
+- name: Set variation directory
+  set_fact:
+    variation_path: "{{role_path}}/systems/{{system}}/variations/{{variation}}"
+    system_path: "{{role_path}}/systems/{{system}}/variations/"
+      
+- name: Generate executor
+  template:
+    src: "{{role_path}}/tasks/component-executor.yaml"
+    dest: "{{role_path}}/component-executor-resolved.yaml"
+    mode: 0777
+  delegate_to: "localhost"
+
+- name: Run componenets
+  include_tasks: "{{role_path}}/component-executor-resolved.yaml"
+
+- name: Delete templates
+  file:
+    path: "{{role_path}}/component-executor-resolved.yaml"
+    state: absent
+# ----------------------------------------------- #
+
+# -------------- Handle Daemon components --------------- #
+- name: Set variation directory
+  set_fact:
+    variation_path: "{{kit_path}}/systems/{{system}}/variations/{{variation}}"
+    system_path: "{{kit_path}}/systems/{{system}}/variations/"
+      
+- name: Generate executor
+  template:
+    src: "{{role_path}}/tasks/daemon-component-executor.yaml"
+    dest: "{{role_path}}/daemon-component-executor-resolved.yaml"
+    mode: 0777
+  delegate_to: "localhost"
+
+- name: Run componenets
+  include_tasks: "{{role_path}}/daemon-component-executor-resolved.yaml"
+
+- name: Delete templates
+  file:
+    path: "{{role_path}}/daemon-component-executor-resolved.yaml"
+    state: absent
+# ----------------------------------------------- #

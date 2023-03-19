@@ -1,6 +1,10 @@
+- name: Ensure image build utils are installed
+  shell: |
+    pacman -S extra/arch-install-scripts --noconfirm
+
 - name: set image dir path
   set_fact:
-    image_dir_path: "{{role_path}}"
+    image_dir_path: "/tmp/"
 
 - name: set rootfs path
   set_fact:
@@ -14,8 +18,8 @@
 
 - name: Enable exec permissions on pacstrap
   copy:
-    src: "{{config_path}}/pacstrap"
-    dest: "{{config_path}}/pacstrap"
+    src: "{{container_config}}/files/pacstrap"
+    dest: "{{container_config}}/files/pacstrap"
     mode: a+x
 
 - name: Mount tmpfs
@@ -23,7 +27,7 @@
 
 - name: Build rootfs
   shell: |
-    {{config_path}}/pacstrap -c {{rootfs_path}} base coreutils sed gzip
+    {{container_config}}/files/pacstrap -c {{rootfs_path}} base coreutils sed gzip
     
     echo base_container > {{rootfs_path}}/etc/hostname
     cp /usr/share/zoneinfo/UTC {{rootfs_path}}/etc/localtime

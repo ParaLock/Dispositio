@@ -1,0 +1,3 @@
+- name: Run routine startup tasks
+  shell: |
+    # /env-setup.sh

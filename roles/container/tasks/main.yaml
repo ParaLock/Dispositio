@@ -10,13 +10,13 @@
   include_vars: "/tmp/vars.yaml"
 
 - name: Running before build hook
-  include_tasks: "{{hooks['on_build']}}"
-  when: operation in ['create']
+  include_tasks: "{{container_config}}/hooks/on_build.yaml"
+  when: operation in ['create', 'build_image']
 
 - name: Build podman image
   containers.podman.podman_image:
     name: "{{image_name}}"
-    path: "{{config_path}}"
+    path: "{{container_config}}/files/"
     state: "{{image_state}}"
     build:
       format: docker
@@ -57,7 +57,7 @@
     ansible_connection: podman
     ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
 
-  when: operation in ['create']
+  when: operation in ['create', 'start']
 
 - name: Copy over host files
   block:
@@ -76,7 +76,7 @@
     - name: Remove host user from host files
       lineinfile:
         path: "{{item}}"
-        regexp: "^{{host_user}}.+" 
+        regexp: "^{{host_username}}.+" 
         state: absent
       with_items:
       - "/etc/group"
@@ -89,9 +89,9 @@
   become: true
 
 - name: Running on create hook
-  include_tasks: "{{hooks['on_create']}}"
+  include_tasks:  "{{container_config}}/hooks/on_create.yaml"
   when: operation in ['create']
 
 - name: Running on start hook
-  include_tasks: "{{hooks['on_start']}}"
+  include_tasks:  "{{container_config}}/hooks/on_start.yaml"
   when: operation in ['start']

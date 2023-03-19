@@ -1,0 +1,10 @@
+[Unit]
+Description = Disposito Service
+
+[Service]
+StandardError=journal
+User={{username}}
+ExecStart=ansible-playbook -u {{username}} {{variation_path}}/files/daemon-component-executor.yaml
+
+[Install]
+WantedBy=multi-user.target

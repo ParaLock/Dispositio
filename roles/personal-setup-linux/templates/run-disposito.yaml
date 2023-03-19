@@ -1,7 +1,0 @@
-{% for comp in components %}
-
-- name: "Running {{comp}}"
-  include_tasks: "{{kit_path}}/playbooks/{{comp}}.yaml"
-
-
-{% endfor %}

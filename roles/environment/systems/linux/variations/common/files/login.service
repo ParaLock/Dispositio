@@ -3,7 +3,7 @@ Description = Login Service
 
 [Service]
 StandardError=journal
-User={{ansible_user}}
+User={{username}}
 ExecStart=/bin/bash --login
 
 [Install]

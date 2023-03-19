@@ -39,7 +39,7 @@ arguments:
     - "/var/lib/containers/storage:/var/lib/containers/storage"
     - "/sys/fs/fuse/connections:/sys/fs/fuse/connections"
     {% endif %}
-    {% if graphics == 'host-xserver' %}
+    {% if 'host-xserver' in graphics %}
     - "/tmp/.X11-unix/:/mnt/.X11-unix/"
     {% endif %}
     {% if sound == 'pipewire' %}

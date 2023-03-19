@@ -1,30 +1,27 @@
 
+- name: Get user id
+  include_tasks: "{{system_path}}/common/get-userid.yaml"
+
 - name: Generate login service
   template:
-    src: "{{role_path}}/login.service"
+    src: "{{variation_path}}/files/login.service"
     dest: "/etc/systemd/system/login.service"
     mode: 0777
-  args:
-    creates: "/etc/systemd/system/login.service"
-  
-- name: Enable login service
-  systemd:
-    name: login
-    state: enable
 
 - name: start login service
   systemd:
+    enabled: true
     name: login
-    state: start
+    state: started
 
 - name: Create bash login if it does not exist
-  command: "touch /home/{{ansible_user}}/.bash_login"
+  command: "touch /home/{{username}}/.bash_login"
   args:
-    creates: /home/{{ansible_user}}/.bash_login
+    creates: /home/{{username}}/.bash_login
 
 - name: Set DBUS path
   lineinfile:
-    path: /home/{{ansible_user}}/.bash_login
+    path: /home/{{username}}/.bash_login
     line: "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
     state: present
 

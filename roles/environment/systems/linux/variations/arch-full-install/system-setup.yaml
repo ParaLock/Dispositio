@@ -1,4 +1,4 @@
-- name: Bootstrap container
+- name: Bootstrap system
   block:
 
     - name: Configure mirror list
@@ -11,12 +11,12 @@
 
     - name: Copy mirror list
       copy:
-        src: "../config/mirrorlist"
+        src: "{{variation_path}}/files/mirrorlist"
         dest: "/etc/pacman.d/mirrorlist"
 
     - name: Copy helper scripts
       copy:
-        src: "../config/{{item}}"
+        src: "{{variation_path}}/files/{{item}}"
         dest: "/"
         mode: '0777'
       with_items:
@@ -32,23 +32,16 @@
         pacman --noconfirm -S archlinux-keyring
         pacman --noconfirm -S sudo
 
-    - name: Relax security limits
-      lineinfile:
-        path: /etc/security/limits.conf
-        state: present
-        line: "$user - nice - 20"
-
     - name: Setup users
       shell: |
-        useradd -m -G wheel {{container_username}}
+        useradd -m -G wheel {{username}}
         echo "root:root" | chpasswd
         echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-        echo "{{container_username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
-        sudo usermod -aG audio {{container_username}}
+        echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+        sudo usermod -aG audio {{username}}
       args:
         creates: /.container_user_created
   
-  delegate_to: "{{container_name}}"
   become_user: "root"
   become: true
 
@@ -67,7 +60,7 @@
         cd paru
         makepkg -sri --needed --noconfirm
       args:
-          chdir: "/home/{{container_username}}"
+          chdir: "/home/{{username}}"
 
     - name: Copy config files
       become: yes
@@ -77,13 +70,13 @@
         dest: "{{item.dest}}"
         mode: "0777"
       with_items:
-        - src: "../config/xorg.conf"
+        - src: "{{variation_path}}/files/xorg.conf"
           dest: "/etc/X11/xorg.conf"
-        - src: "../config/Xwrapper.config"
+        - src: "{{variation_path}}/files/Xwrapper.config"
           dest: "/etc/X11/Xwrapper.config"
-        - src: "../config/xinitrc"
+        - src: "{{variation_path}}/files/xinitrc"
           dest: "/etc/X11/xinit/xinitrc"
-        - src: "../config/xserverrc"
+        - src: "{{variation_path}}/files/xserverrc"
           dest: "/etc/X11/xinit/xserverrc"
     
     - name: Install packages
@@ -170,7 +163,7 @@
       become: yes
       become_user: "root"
       template:
-        src: "../config/config.ini"
+        src: "{{variation_path}}/files/config.ini"
         dest: "/etc/ly/config.ini"
         mode: "0777"
 
@@ -181,10 +174,10 @@
         src: "{{item.src}}"
         dest: "{{item.dest}}"
       with_items:
-        - src: "../config/ly"
+        - src: "{{variation_path}}/files/ly"
           dest: "/usr/bin/"
 
 
   become: yes
-  become_user: "{{container_username}}"
-  delegate_to: "{{container_name}}"
+  become_user: "{{username}}"
+

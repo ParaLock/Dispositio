@@ -1,0 +1,15 @@
+- name: Relax security limits
+  lineinfile:
+    path: /etc/security/limits.conf
+    state: present
+    line: "{{container_username}} - nice - 20"
+
+- name: Setup users
+  shell: |
+    useradd -m -G wheel {{container_username}}
+    echo "root:root" | chpasswd
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo "{{container_username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+    sudo usermod -aG audio {{container_username}}
+  args:
+    creates: /.container_user_created

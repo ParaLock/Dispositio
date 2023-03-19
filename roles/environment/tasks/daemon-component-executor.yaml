@@ -1,0 +1,30 @@
+# In this playbook we run any components marked as daemon components
+
+- hosts: localhost
+  connection: local
+  become: yes
+  become_user: root
+  gather_facts: yes
+
+  tasks:
+
+{% for comp in daemon_components %}
+
+    - block:
+        - name: "Running {{comp.name}}"
+          include_tasks: "{{variation_path}}/{{comp.name}}.yaml"
+          vars:
+            comp_params: "{{comp.params | default({})}}"
+
+        - name: "Running {{comp.name}} (common)"
+          include_tasks: "{{system_path}}/common/{{comp.name}}.yaml"
+          vars:
+            comp_params: "{{comp.params | default({})}}"
+
+      rescue:
+        - name: Done with componenets
+          debug:
+            msg: 'Done executing components'
+            
+{% endfor %}
+

@@ -1,0 +1,58 @@
+- hosts: localhost
+  connection: local
+  become: yes
+  become_user: root
+  gather_facts: yes
+  roles:
+
+    - role: container
+      container_name: "{{container_name}}"
+      container_config: "../container_configs/archlinux_with_xserver"
+      image_name: archlinux_with_xserver
+      graphics: x-server,host-xserver
+      sound: pipewire
+      nested_containers: false
+      gpu: nvidia
+      copy_host_user: true
+      tty: 2
+      container_username: "linuxdev"
+      host_username: "linuxdev"
+
+  tasks:
+    - name:
+      debug:
+        msg: "Done managing container"
+
+- hosts: "{{container_name}}"
+  connection: podman
+  become: yes
+  become_user: root
+  gather_facts: yes
+  roles:
+
+    - role: environment
+      system: linux
+      variation: arch-full-install
+      username: linuxdev
+      components:
+
+        - name: system-setup
+        - name: disposito-daemon
+
+      daemon_components:
+        - name: system-boot
+          params:
+            username: linuxdev
+
+        # - name: disposito-daemon
+
+        # - name: system-boot
+        #   daemon_process: true
+        #   params:
+        #     username: linuxdev
+
+  tasks:
+    - name:
+      debug:
+        msg: "Done setting up misc stuff"
+

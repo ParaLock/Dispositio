@@ -10,14 +10,14 @@
 
 - name: Generate daemon vars
   template:
-    src: "{{role_path}}/tasks/daemon-vars.yaml"
+    src: "{{common_path}}/daemon-vars.yaml"
     dest: "{{kit_common_path}}/files/daemon-vars.yaml"
     mode: 0777
   ignore_errors: true
 
 - name: Generate deamon playbook
   template:
-    src: "{{role_path}}/tasks/daemon-executor.yaml"
+    src: "{{common_path}}/daemon-executor.yaml"
     dest: "{{kit_common_path}}/files/daemon-executor.yaml"
     owner: "{{ username }}"
     mode: 0777
@@ -27,7 +27,7 @@
 
     - name: Copy over disposito service
       template:
-        src: "{{role_path}}/tasks/files/disposito.service"
+        src: "{{common_path}}/files/disposito.service"
         dest: "/etc/systemd/system/disposito.service"
         mode: 0777
 

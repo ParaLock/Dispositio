@@ -6,24 +6,6 @@
   set_fact:
     daemon_components: []
 
-# - name: Find environment files
-#   find:
-#     paths: "{{role_path}}/systems/{{system}}/"
-#     patterns: "*"
-#     recurse: true
-#   register: files
-#   delegate_to: "localhost"
-
-# - name: Create directory structure
-#   vars:
-#     file_path: '{{ item.path | replace(role_path, "") }}'
-#     file_name: '{{file_path | basename}}'
-#   file:
-#     path: "{{kit_path}}/{{file_path | replace(file_name, '')}}"
-#     state: directory
-#     mode: 0777
-#   with_items: "{{ files.files }}"
-
 - name: Set variation directory
   set_fact:
     variation_path: "{{role_path}}/systems/{{system}}/variations/{{variation}}"
@@ -41,7 +23,7 @@
   include_tasks: "{{role_path}}/component-executor-resolved.yaml"
 
 - name: Install daemon components
-  include_tasks: "{{role_path}}/tasks/install-daemon.yaml"
+  include_tasks: "{{common_path}}/install-daemon.yaml"
 
 - name: Delete templates
   file:

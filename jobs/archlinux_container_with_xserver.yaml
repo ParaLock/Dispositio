@@ -37,19 +37,11 @@
       components:
 
         - name: system-setup
-        - name: disposito-daemon
+        - name: install-daemon
 
       daemon_components:
+
         - name: system-boot
-          params:
-            username: linuxdev
-
-        # - name: disposito-daemon
-
-        # - name: system-boot
-        #   daemon_process: true
-        #   params:
-        #     username: linuxdev
 
   tasks:
     - name:

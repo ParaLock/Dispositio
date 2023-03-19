@@ -1,3 +1,4 @@
+
 {% for comp in components %}
 
 - block:
@@ -6,8 +7,15 @@
       vars:
         comp_params: "{{comp.params | default({})}}"
 
+  rescue:
+    - name: Done with componenets
+      debug:
+        msg: 'Done executing components'
+
+- block:
+
     - name: "Running {{comp.name}} (common)"
-      include_tasks: "{{system_path}}/common/{{comp.name}}.yaml"
+      include_tasks: "{{common_path}}/{{comp.name}}.yaml"
       vars:
         comp_params: "{{comp.params | default({})}}"
 
@@ -15,4 +23,5 @@
     - name: Done with componenets
       debug:
         msg: 'Done executing components'
+
 {% endfor %}

@@ -1,0 +1,58 @@
+- name: Set kit directory
+  set_fact:
+    kit_path: "/home/{{username}}/disposito_kit"
+
+- name: Set remote directories
+  set_fact:
+    kit_variation_path: "{{kit_path}}/systems/{{system}}/variations/{{variation}}"
+    kit_system_path: "{{kit_path}}/systems/{{system}}/variations/"
+    kit_common_path: "{{kit_path}}/systems/{{system}}/variations/common"
+
+- name: Copy over daemon component playbooks from variation
+  copy:
+    src: "{{variation_path}}/{{item.name}}.yaml"
+    dest: "{{kit_variation_path}}/{{item.name}}.yaml"
+    mode: 0777
+  with_items: "{{daemon_components}}"
+  ignore_errors: true
+
+- name: Copy over daemon component playbooks from common
+  copy:
+    src: "{{common_path}}/{{item.name}}.yaml"
+    dest: "{{kit_common_path}}/{{item.name}}.yaml"
+    mode: 0777
+  with_items: "{{daemon_components}}"
+  ignore_errors: true
+
+- name: Generate daemon vars
+  template:
+    src: "{{common_path}}/files/daemon-vars.yaml"
+    dest: "{{kit_common_path}}/files/daemon-vars.yaml"
+    mode: 0777
+  ignore_errors: true
+
+- name: Generate deamon playbook
+  template:
+    src: "{{common_path}}/playbooks/daemon-playbook.yaml"
+    dest: "{{kit_common_path}}/files/daemon-playbook.yaml"
+    owner: "{{ username }}"
+    mode: 0777
+
+- name: Setup services
+  block:
+
+    - name: Copy over disposito service
+      template:
+        src: "{{common_path}}/files/disposito.service"
+        dest: "/etc/systemd/system/disposito.service"
+        mode: 0777
+
+    - name: start disposito service
+      systemd:
+        enabled: true
+        name: disposito
+        state: started
+
+  become: true
+  become_user: root
+  become_method: sudo

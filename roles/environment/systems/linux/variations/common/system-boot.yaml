@@ -1,10 +1,14 @@
+- name: Get user id (raw)
+  shell: id -u {{ username }}
+  register: raw_user_id
 
 - name: Get user id
-  include_tasks: "{{system_path}}/common/get-userid.yaml"
+  set_fact: 
+    user_id: "{{raw_user_id.stdout_lines[0]}}"
 
 - name: Generate login service
   template:
-    src: "{{variation_path}}/files/login.service"
+    src: "{{kit_variation_path}}/files/login.service"
     dest: "/etc/systemd/system/login.service"
     mode: 0777
 

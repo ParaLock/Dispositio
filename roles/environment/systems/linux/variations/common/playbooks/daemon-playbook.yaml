@@ -12,12 +12,7 @@
 
     - block:
         - name: "Running {{comp.name}}"
-          include_tasks: "{{variation_path}}/{{comp.name}}.yaml"
-          vars:
-            comp_params: "{{comp.params | default({})}}"
-
-        - name: "Running {{comp.name}} (common)"
-          include_tasks: "{{system_path}}/common/{{comp.name}}.yaml"
+          include_tasks: "{{kit_variation_path}}/{{comp.name}}.yaml"
           vars:
             comp_params: "{{comp.params | default({})}}"
 
@@ -25,6 +20,18 @@
         - name: Done with componenets
           debug:
             msg: 'Done executing components'
-            
+
+    - block:
+        - name: "Running {{comp.name}} (common)"
+          include_tasks: "{{kit_common_path}}/{{comp.name}}.yaml"
+          vars:
+            comp_params: "{{comp.params | default({})}}"
+
+      rescue:
+        - name: Done with componenets
+          debug:
+            msg: 'Done executing components'
+
+
 {% endfor %}
 

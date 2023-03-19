@@ -8,33 +8,17 @@
     kit_system_path: "{{kit_path}}/systems/{{system}}/variations/"
     kit_common_path: "{{kit_path}}/systems/{{system}}/variations/common"
 
-- name: Copy over daemon component playbooks from variation
-  copy:
-    src: "{{variation_path}}/{{item.name}}.yaml"
-    dest: "{{kit_variation_path}}/{{item.name}}.yaml"
-    mode: 0777
-  with_items: "{{daemon_components}}"
-  ignore_errors: true
-
-- name: Copy over daemon component playbooks from common
-  copy:
-    src: "{{common_path}}/{{item.name}}.yaml"
-    dest: "{{kit_common_path}}/{{item.name}}.yaml"
-    mode: 0777
-  with_items: "{{daemon_components}}"
-  ignore_errors: true
-
 - name: Generate daemon vars
   template:
-    src: "{{common_path}}/files/daemon-vars.yaml"
+    src: "{{role_path}}/tasks/daemon-vars.yaml"
     dest: "{{kit_common_path}}/files/daemon-vars.yaml"
     mode: 0777
   ignore_errors: true
 
 - name: Generate deamon playbook
   template:
-    src: "{{common_path}}/playbooks/daemon-playbook.yaml"
-    dest: "{{kit_common_path}}/files/daemon-playbook.yaml"
+    src: "{{role_path}}/tasks/daemon-executor.yaml"
+    dest: "{{kit_common_path}}/files/daemon-executor.yaml"
     owner: "{{ username }}"
     mode: 0777
 
@@ -43,7 +27,7 @@
 
     - name: Copy over disposito service
       template:
-        src: "{{common_path}}/files/disposito.service"
+        src: "{{role_path}}/tasks/files/disposito.service"
         dest: "/etc/systemd/system/disposito.service"
         mode: 0777
 

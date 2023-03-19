@@ -2,23 +2,27 @@
   set_fact:
     kit_path: "/home/{{username}}/disposito_kit"
 
-- name: Find environment files
-  find:
-    paths: "{{role_path}}/systems/{{system}}/"
-    patterns: "*"
-    recurse: true
-  register: files
-  delegate_to: "localhost"
+- name: Set more vars
+  set_fact:
+    daemon_components: []
 
-- name: Create directory structure
-  vars:
-    file_path: '{{ item.path | replace(role_path, "") }}'
-    file_name: '{{file_path | basename}}'
-  file:
-    path: "{{kit_path}}/{{file_path | replace(file_name, '')}}"
-    state: directory
-    mode: 0777
-  with_items: "{{ files.files }}"
+# - name: Find environment files
+#   find:
+#     paths: "{{role_path}}/systems/{{system}}/"
+#     patterns: "*"
+#     recurse: true
+#   register: files
+#   delegate_to: "localhost"
+
+# - name: Create directory structure
+#   vars:
+#     file_path: '{{ item.path | replace(role_path, "") }}'
+#     file_name: '{{file_path | basename}}'
+#   file:
+#     path: "{{kit_path}}/{{file_path | replace(file_name, '')}}"
+#     state: directory
+#     mode: 0777
+#   with_items: "{{ files.files }}"
 
 - name: Set variation directory
   set_fact:
@@ -33,8 +37,11 @@
     mode: 0777
   delegate_to: "localhost"
 
-- name: Run componenets
+- name: Run components
   include_tasks: "{{role_path}}/component-executor-resolved.yaml"
+
+- name: Install daemon components
+  include_tasks: "{{role_path}}/tasks/install-daemon.yaml"
 
 - name: Delete templates
   file:

@@ -37,10 +37,8 @@
       components:
 
         - name: system-setup
-        - name: install-daemon
-
-      daemon_components:
-
+          additional_packages:
+            - "steam"
         - name: system-boot
 
   tasks:

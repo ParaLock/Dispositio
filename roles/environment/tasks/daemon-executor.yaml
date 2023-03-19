@@ -1,0 +1,17 @@
+# In this playbook we run any components marked as daemon components
+
+- hosts: localhost
+  connection: local
+  become: yes
+  become_user: root
+  gather_facts: yes
+
+  tasks:
+
+{% for comp in daemon_components %}
+
+  - name: Running component
+    include_tasks: "{{comp_path}}"
+
+{% endfor %}
+

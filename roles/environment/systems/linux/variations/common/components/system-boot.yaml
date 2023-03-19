@@ -1,0 +1,29 @@
+- name: Build component path
+  set_fact:
+    comp_path: "{{kit_path}}/system-boot-tasks.yaml"
+
+- name: Copy required daemon files
+  copy:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: "{{ username }}"
+    mode: 0777
+  with_items:
+    - src: "{{common_path}}/components/playbooks/system-boot-tasks.yaml"
+      dest: "{{comp_path}}"
+    - src: "{{common_path}}/components/playbooks/get-userid.yaml"
+      dest: "{{kit_path}}/get-userid.yaml"
+    - src: "{{common_path}}/files/login.service"
+      dest: "{{kit_path}}/login.service"
+
+- name: Copy required daemon templates
+  templates:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: "{{ username }}"
+    mode: 0777
+  with_items:
+
+- name: Register daemon component
+  set_fact:
+    daemon_components: "{{daemon_components + [comp_path]}}"

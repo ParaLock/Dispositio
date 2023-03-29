@@ -37,8 +37,6 @@
       components:
 
         - name: system-setup
-          additional_packages:
-            - "steam"
         - name: system-boot
 
   tasks:

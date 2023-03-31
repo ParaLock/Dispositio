@@ -80,8 +80,6 @@
           dest: "/etc/X11/xinit/xserverrc"
     
     - name: Install packages
-      become: yes
-      become_user: "root"
       shell: "sudo pacman -S --noconfirm {{item}}"
       with_items:
         - ansible
@@ -177,6 +175,17 @@
         - src: "{{variation_path}}/files/ly"
           dest: "/usr/bin/"
 
+    - name: Install nvidia drivers
+      shell: "paru -S --noconfirm {{item}}"
+      with_items:
+        - nvidia
+      when: params['gpu_driver'] == 'nvidia'
+
+    - name: Install nvidia drivers
+      shell: "paru -S --noconfirm {{item}}"
+      with_items:
+        - nvidia-lts
+      when: params['gpu_driver'] == 'nvidia-lts'
 
   become: yes
   become_user: "{{username}}"

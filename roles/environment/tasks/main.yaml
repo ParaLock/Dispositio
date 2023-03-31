@@ -11,7 +11,14 @@
     variation_path: "{{role_path}}/systems/{{system}}/variations/{{variation}}"
     system_path: "{{role_path}}/systems/{{system}}/variations/"
     common_path: "{{role_path}}/systems/{{system}}/variations/common/"
-      
+
+- name: Create kit directory
+  file:
+    path: "{{kit_path}}"
+    state: directory
+    mode: 0777
+    owner: "{{username}}"
+
 - name: Generate executor
   template:
     src: "{{role_path}}/tasks/component-executor.yaml"

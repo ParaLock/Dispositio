@@ -11,14 +11,14 @@
 - name: Generate daemon vars
   template:
     src: "{{common_path}}/daemon-vars.yaml"
-    dest: "{{kit_common_path}}/files/daemon-vars.yaml"
+    dest: "{{kit_path}}/daemon-vars.yaml"
     mode: 0777
   ignore_errors: true
 
 - name: Generate deamon playbook
   template:
     src: "{{common_path}}/daemon-executor.yaml"
-    dest: "{{kit_common_path}}/files/daemon-executor.yaml"
+    dest: "{{kit_path}}/daemon-executor.yaml"
     owner: "{{ username }}"
     mode: 0777
 

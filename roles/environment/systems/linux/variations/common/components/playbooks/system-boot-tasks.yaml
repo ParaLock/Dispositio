@@ -20,10 +20,16 @@
 
 - name: Set DBUS path
   lineinfile:
-    path: /home/{{username}}/.bash_login
-    line: "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
+    path: /etc/environment
+    line: "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
     state: present
 
+- name: Set display variable
+  lineinfile:
+    path: /etc/environment
+    line: "DISPLAY=:0"
+    state: present
+    
 - name: Disable getty
   systemd:
     name: getty@{{item}}.service

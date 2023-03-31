@@ -37,6 +37,8 @@
       components:
 
         - name: system-setup
+          params:
+            gpu_driver: nvidia
         - name: system-boot
 
   tasks:

@@ -2,26 +2,29 @@
 {% for comp in components %}
 
 - block:
+
     - name: "Running {{comp.name}}"
       include_tasks: "{{variation_path}}/components/{{comp.name}}.yaml"
       vars:
-        comp_params: "{{comp.params | default({})}}"
+        params: {{comp.params | default({})}}
+      ignore_errors: true
 
   rescue:
-    # - name: Done with componenets
-    #   debug:
-    #     msg: 'Done executing components'
+    - name: Done with componenets
+      debug:
+        msg: 'Done executing components'
 
 - block:
 
     - name: "Running {{comp.name}} (common)"
       include_tasks: "{{common_path}}/components/{{comp.name}}.yaml"
       vars:
-        comp_params: "{{comp.params | default({})}}"
+        params: {{comp.params | default({})}}
+      ignore_errors: true
 
   rescue:
-    # - name: Done with componenets
-    #   debug:
-    #     msg: 'Done executing components'
+    - name: Done with componenets
+      debug:
+        msg: 'Done executing components'
 
 {% endfor %}

@@ -41,6 +41,10 @@
     command: "/usr/sbin/init"
   when: operation in ['create', 'start']
 
+- name: Running on_init hooks
+  include_tasks: "{{container_config}}/hooks/on_init.yaml"
+  when: operation in ['create', 'build_image']
+
 - name: Destroy container
   containers.podman.podman_container:
     name:  "{{container_name}}"

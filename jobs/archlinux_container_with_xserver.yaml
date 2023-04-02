@@ -9,7 +9,7 @@
       container_name: "{{container_name}}"
       container_config: "../container_configs/archlinux_with_xserver"
       image_name: archlinux_with_xserver
-      graphics: x-server,host-xserver
+      graphics: x-server
       sound: pipewire
       nested_containers: false
       gpu: nvidia
@@ -17,9 +17,15 @@
       tty: 2
       operation: "{{desired_operation}}"
       container_username: "linuxdev"
+      container_password: "root"
       host_username: "linuxdev"
 
   tasks:
+
+    - name:
+      meta: refresh_inventory
+      when: desired_operation == 'start'
+
     - name:
       debug:
         msg: "Done managing container"
@@ -35,6 +41,7 @@
       system: linux
       variation: arch-full-install
       username: linuxdev
+      password: root
       components:
         - name: system-boot
         - name: system-setup

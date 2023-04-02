@@ -10,10 +10,19 @@
     - name: Setup users
       shell: |
         useradd -m -G wheel {{container_username}}
-        echo "root:root" | chpasswd
         echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
         echo "{{container_username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
         sudo usermod -aG audio {{container_username}}
+
+    - name: Change root password
+      user:
+        name: root
+        password: "{{ container_password | password_hash('sha512') }}"
+
+    - name: Change container user password
+      user:
+        name: "{{ container_username }}"
+        password: "{{ container_password | password_hash('sha512') }}"
 
   delegate_to: "{{container_name}}"
   vars:

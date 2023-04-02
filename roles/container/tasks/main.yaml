@@ -28,6 +28,7 @@
   containers.podman.podman_container:
     name:  "{{container_name}}"
     image: "{{image_name}}"
+    mount: "{{arguments.mount}}"
     state: "{{container_state}}"
     network: "{{arguments.network}}"
     device: "{{arguments.device}}"

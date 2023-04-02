@@ -1,49 +1,44 @@
 - name: Get user id 
   include_tasks: "{{common_path}}/playbooks/get-userid.yaml"
 
-- name: Bootstrap system
-  block:
+- name: Configure mirror list
+  blockinfile:
+    path: /etc/pacman.conf
+    state: present
+    block: |
+      [multilib]
+      Include = /etc/pacman.d/mirrorlist
 
-    - name: Configure mirror list
-      blockinfile:
-        path: /etc/pacman.conf
-        state: present
-        block: |
-          [multilib]
-          Include = /etc/pacman.d/mirrorlist
+- name: Copy mirror list
+  copy:
+    src: "{{variation_path}}/data/mirrorlist"
+    dest: "/etc/pacman.d/mirrorlist"
 
-    - name: Copy mirror list
-      copy:
-        src: "{{variation_path}}/data/mirrorlist"
-        dest: "/etc/pacman.d/mirrorlist"
+- name: Copy helper scripts
+  copy:
+    src: "{{variation_path}}/data/{{item}}"
+    dest: "/"
+    mode: '0777'
+  with_items:
+    - env-setup.sh
+    - start-xserver.sh
 
-    - name: Copy helper scripts
-      copy:
-        src: "{{variation_path}}/data/{{item}}"
-        dest: "/"
-        mode: '0777'
-      with_items:
-        - env-setup.sh
-        - attach-host-xserver.sh
-        - start-xserver.sh
+- name: Setup pacman keyring
+  shell: |
+    pacman-key --init
+    pacman-key --populate archlinux
+    pacman --noconfirm -Sy archlinux-keyring && pacman --noconfirm -Su
+    pacman --noconfirm -S archlinux-keyring
+    pacman --noconfirm -S sudo
 
-    - name: Setup pacman keyring
-      shell: |
-        pacman-key --init
-        pacman-key --populate archlinux
-        pacman --noconfirm -Sy archlinux-keyring && pacman --noconfirm -Su
-        pacman --noconfirm -S archlinux-keyring
-        pacman --noconfirm -S sudo
-
-    - name: Setup users
-      shell: |
-        useradd -m -G wheel {{username}}
-        echo "root:root" | chpasswd
-        echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-        echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
-        sudo usermod -aG audio {{username}}
-      args:
-        creates: /.container_user_created
+- name: Setup users
+  shell: |
+    useradd -m -G wheel {{username}}
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+    sudo usermod -aG audio {{username}}
+  args:
+    creates: /.container_user_created
 
 - name: Setup system as new user
   block:

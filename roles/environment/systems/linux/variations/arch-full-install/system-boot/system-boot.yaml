@@ -11,7 +11,7 @@
   with_items:
     - src: "./system-boot-daemon.yaml"
       dest: "{{kit_path}}/daemon/system-boot-daemon.yaml"
-    - src: "../get-userid.yaml"
+    - src: "../../common/get-userid.yaml"
       dest: "{{kit_path}}/helpers/get-userid.yaml"
 
 - name: Copy required daemon templates

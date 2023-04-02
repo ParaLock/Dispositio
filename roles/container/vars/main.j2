@@ -1,23 +1,28 @@
 arguments:
   network: host
   mount:
-    - "mount=type=bind,src=/dev/shm,dst=/dev/shm"
+
+    {% if sound == 'pulse' or sound == 'pipewire' %}
+    - "type=bind,src=/dev/snd,dst=/dev/snd"
+    {% endif %}
+
+    {% if gpu == 'nvidia' %}
+    - "type=bind,src=/dev/nvidiactl,dst=/dev/nvidiactl"
+    - "type=bind,src=/dev/nvidia-modeset,dst=/dev/nvidia-modeset"
+    - "type=bind,src=/dev/nvidia0,dst=/dev/nvidia0"
+    - "type=bind,src=/dev/nvidia-uvm,dst=/dev/nvidia-uvm"
+    - "type=bind,src=/dev/nvidia-uvm-tools,dst=/dev/nvidia-uvm-tools"
+    {% endif %}
+
+    - "type=bind,src=/dev/shm,dst=/dev/shm"
+    - "type=bind,src=/dev/input,dst=/dev/input"
+    - "type=bind,src=/dev/dri,dst=/dev/dri"
+
   device:
     {% if 'tty' in vars %}
     - "/dev/tty{{tty}}:/dev/tty{{tty}}:rwm"
     {% endif %}
-    - "/dev/input:/dev/input:rwm"
-    - "/dev/dri:/dev/dri:rwm"
-    {% if sound == 'pulse' or sound == 'pipewire' %}
-    - "/dev/snd:/dev/snd:rwm"
-    {% endif %}
-    {% if gpu == 'nvidia' %}
-    - "/dev/nvidiactl:/dev/nvidiactl:rwm"
-    - "/dev/nvidia-modeset:/dev/nvidia-modeset:rwm"
-    - "/dev/nvidia0:/dev/nvidia0:rwm"
-    - "/dev/nvidia-uvm:/dev/nvidia-uvm:rwm"
-    - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools:rwm"
-    {% endif %}
+
     - "/dev/fuse:/dev/fuse:rwm"
   cap_add:
     - CAP_SYS_ADMIN

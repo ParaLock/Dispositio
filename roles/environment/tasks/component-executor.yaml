@@ -4,7 +4,7 @@
 - block:
 
     - name: "Running {{comp.name}}"
-      include_tasks: "{{variation_path}}/components/{{comp.name}}.yaml"
+      include_tasks: "{{variation_path}}/{{comp.name}}/{{comp.name}}.yaml"
       vars:
         params: {{comp.params | default({})}}
       ignore_errors: true
@@ -17,7 +17,7 @@
 - block:
 
     - name: "Running {{comp.name}} (common)"
-      include_tasks: "{{common_path}}/components/{{comp.name}}.yaml"
+      include_tasks: "{{common_path}}/{{comp.name}}/{{comp.name}}.yaml"
       vars:
         params: {{comp.params | default({})}}
       ignore_errors: true

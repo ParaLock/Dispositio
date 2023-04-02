@@ -1,5 +1,5 @@
 - name: Get user id 
-  include_tasks: "{{kit_path}}/get-userid.yaml"
+  include_tasks: "{{kit_path}}/helpers/get-userid.yaml"
 
 - name: Generate login service
   template:
@@ -7,11 +7,11 @@
     dest: "/etc/systemd/system/login.service"
     mode: 0777
 
-- name: start login service
-  systemd:
-    enabled: true
-    name: login
-    state: started
+# - name: start login service
+#   systemd:
+#     enabled: true
+#     name: login
+#     state: started
 
 - name: Create bash login if it does not exist
   command: "touch /home/{{username}}/.bash_login"
@@ -52,4 +52,25 @@
   systemd:
     name: "user@{{ user_id }}"
     state: started
+
+- name: Create bash login if it does not exist
+  command: "touch /home/{{username}}/.bash_login"
+  args:
+    creates: /home/{{username}}/.bash_login
+
+- name: Disable xhost permissions
+
+
+- name: Perform container specific tasks
+  block:
+
+    - name: Properly mount pipewire
+      shell: |
+        rm -f /run/user/1000/pipewire-0
+        ln -s /mnt/pipewire-0 /run/user/1000/pipewire-0
+      when: "'pipewire' in container_vars['sound'] | default('')"
+
+  when: (container_vars != None)
+
+
 

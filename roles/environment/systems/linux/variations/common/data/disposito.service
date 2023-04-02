@@ -1,0 +1,10 @@
+[Unit]
+Description = Disposito Service
+
+[Service]
+StandardError=journal
+User={{username}}
+ExecStart=ansible-playbook -u {{username}} {{kit_path}}/daemon/daemon-executor.yaml --extra-vars "@{{kit_path}}/daemon/daemon-vars.yaml"
+
+[Install]
+WantedBy=multi-user.target

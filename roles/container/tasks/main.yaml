@@ -1,13 +1,14 @@
-
 - name: Prepare vars file from template.
   template:
     src: vars/main.j2
     dest: /tmp/vars.yaml
     lstrip_blocks: true
     trim_blocks: true
+  when: operation not in ['restart']
 
 - name: Include vars
   include_vars: "/tmp/vars.yaml"
+  when: operation not in ['restart']
 
 - name: Running before build hook
   include_tasks: "{{container_config}}/hooks/on_build.yaml"
@@ -51,17 +52,46 @@
     state: "{{container_state}}"
   when: operation in ['destroy']
 
+- name: Stop container
+  containers.podman.podman_container:
+    name:  "{{container_name}}"
+    state: "stopped"
+  when: operation in ['restart']
+  ignore_errors: true
+
+- name: Start container
+  containers.podman.podman_container:
+    name:  "{{container_name}}"
+    state: "started"
+  when: operation in ['restart']
+  ignore_errors: true
+
 - name: Adding new container to hosts
   add_host:
     name: "{{container_name}}"
     become_ask_pass: True
+
+    container_vars:
+      container_name: "{{container_name}}"
+      container_config: "{{container_config}}"
+      image_name: "{{image_name}}"
+      graphics: "{{graphics}}"
+      sound: "{{sound}}"
+      nested_containers: "{{nested_containers}}"
+      gpu: "{{gpu}}"
+      copy_host_user: "{{copy_host_user}}"
+      tty: "{{tty}}"
+      operation: "{{desired_operation}}"
+      container_username: "linuxdev"
+      host_username: "linuxdev"
+
     ansible_become_flags: "-s -H"
     ansible_become_method: "sudo"
     ansible_host: "{{container_name}}"
     ansible_connection: podman
     ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
 
-  when: operation in ['create', 'start']
+  when: operation in ['create', 'start', 'restart']
 
 - name: Copy over host files
   block:

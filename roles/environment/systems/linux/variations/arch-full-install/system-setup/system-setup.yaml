@@ -1,0 +1,248 @@
+- name: Get user id 
+  include_tasks: "{{common_path}}/playbooks/get-userid.yaml"
+
+- name: Bootstrap system
+  block:
+
+    - name: Configure mirror list
+      blockinfile:
+        path: /etc/pacman.conf
+        state: present
+        block: |
+          [multilib]
+          Include = /etc/pacman.d/mirrorlist
+
+    - name: Copy mirror list
+      copy:
+        src: "{{variation_path}}/data/mirrorlist"
+        dest: "/etc/pacman.d/mirrorlist"
+
+    - name: Copy helper scripts
+      copy:
+        src: "{{variation_path}}/data/{{item}}"
+        dest: "/"
+        mode: '0777'
+      with_items:
+        - env-setup.sh
+        - attach-host-xserver.sh
+        - start-xserver.sh
+
+    - name: Setup pacman keyring
+      shell: |
+        pacman-key --init
+        pacman-key --populate archlinux
+        pacman --noconfirm -Sy archlinux-keyring && pacman --noconfirm -Su
+        pacman --noconfirm -S archlinux-keyring
+        pacman --noconfirm -S sudo
+
+    - name: Setup users
+      shell: |
+        useradd -m -G wheel {{username}}
+        echo "root:root" | chpasswd
+        echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+        echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+        sudo usermod -aG audio {{username}}
+      args:
+        creates: /.container_user_created
+
+- name: Setup system as new user
+  block:
+
+    - name: Update base system
+      shell: |
+        sudo pacman --noconfirm -Syu
+        sudo pacman --noconfirm -S base-devel git
+        sudo pacman --noconfirm -Syu archlinux-keyring
+
+    - name: Install paru
+      shell: |
+        git clone https://aur.archlinux.org/paru.git
+        cd paru
+        makepkg -sri --needed --noconfirm
+      args:
+          chdir: "/home/{{username}}"
+
+    - name: Copy config files
+      become: yes
+      become_user: "root"
+      template:
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
+        mode: "0777"
+      with_items:
+        - src: "{{variation_path}}/data/xorg.conf"
+          dest: "/etc/X11/xorg.conf"
+        - src: "{{variation_path}}/data/Xwrapper.config"
+          dest: "/etc/X11/Xwrapper.config"
+        - src: "{{variation_path}}/data/xinitrc"
+          dest: "/etc/X11/xinit/xinitrc"
+        - src: "{{variation_path}}/data/xserverrc"
+          dest: "/etc/X11/xinit/xserverrc"
+        - src: "{{variation_path}}/data/ly.service"
+          dest: "/etc/systemd/system/ly.service"
+
+    - name: Install packages
+      shell: "sudo pacman -S --noconfirm {{packages | join(' ')}}"
+      vars:
+        packages:
+          - ansible
+          - xorg
+          - xorg-xinit
+          - xterm
+          - xf86-input-evdev
+          - openbox
+          - xorg-fonts-misc
+          - ttf-dejavu
+          - nano
+          - htop
+          - wine-staging
+          - winetricks
+          - giflib
+          - lib32-giflib
+          - libpng
+          - lib32-libpng
+          - libldap
+          - lib32-libldap
+          - gnutls
+          - lib32-gnutls
+          - mpg123
+          - lib32-mpg123
+          - openal
+          - lib32-openal
+          - v4l-utils
+          - lib32-v4l-utils
+          - libpulse
+          - lib32-libpulse
+          - alsa-plugins
+          - lib32-alsa-plugins
+          - alsa-lib
+          - lib32-alsa-lib
+          - libjpeg-turbo
+          - lib32-libjpeg-turbo
+          - libxcomposite
+          - lib32-libxcomposite
+          - libxinerama
+          - vulkan-tools
+          - lib32-libxinerama
+          - ncurses
+          - lib32-ncurses
+          - opencl-icd-loader
+          - lib32-opencl-icd-loader
+          - libxslt
+          - lib32-libxslt
+          - libva
+          - lib32-libva
+          - gtk3
+          - lib32-gtk3
+          - gst-plugins-base-libs
+          - lib32-gst-plugins-base-libs
+          - vulkan-icd-loader
+          - lib32-vulkan-icd-loader
+          - cups
+          - samba
+          - dosbox
+          - rtkit
+          - alsa
+          - alsa-firmware
+          - alsa-utils
+          - wireplumber
+          - pipewire
+          - pipewire-pulse
+          - pipewire-alsa
+
+
+    - name: Start rtkit service
+      systemd:
+        enabled: true
+        name: "rtkit-daemon"
+        state: started
+      become_user: "root"
+      become: true
+
+    - name: Start user service
+      systemd:
+        name: "user@{{ user_id }}"
+        state: started
+      become_user: "root"
+      become: true
+
+    - name: start audio services
+      systemd:
+        scope: "user"
+        enabled: true
+        name: "{{item}}"
+        state: started
+      with_items:
+        - pipewire
+        - pipewire-pulse
+        - wireplumber
+      environment:
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{user_id}}/bus"
+
+    - name: Install paru packages
+      shell: "paru -S --noconfirm {{packages | join(' ')}}"
+      vars:
+        packages:
+          - nano
+          - steam
+          - wget
+          - ly
+          - xf86-input-evdev
+          - openbox
+
+    - name: Copy ly config
+      become: yes
+      become_user: "root"
+      template:
+        src: "{{variation_path}}/data/config.ini"
+        dest: "/etc/ly/config.ini"
+        mode: "0777"
+
+    - name: Copy over ly files
+      become: yes
+      become_user: "root"
+      copy:
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
+      with_items:
+        - src: "{{variation_path}}/data/ly"
+          dest: "/usr/bin/"
+          
+    - name: start ly services
+      become: yes
+      become_user: "root"
+      systemd:
+        enabled: true
+        name: "ly"
+        state: started
+      environment:
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{user_id}}/bus"
+
+  become_user: "{{username}}"
+  become: true
+
+- name: Install graphics drivers
+  block:
+    - name: Install nvidia drivers
+      shell: "paru -S --noconfirm {{item}}"
+      with_items:
+        - nvidia
+
+    - name: find vulkan loader configs
+      find:
+        paths: "/usr/share/vulkan/icd.d/"
+        patterns: "*"
+        file_type: file
+      register: files_to_check
+
+    - name: Delete non nvidia files
+      become: yes
+      become_user: "root"
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ files_to_check.files }}"
+      when: item.path | basename | regex_search('^(?!nvidia_icd.json$).*')
+
+  when: params['gpu_driver'] == 'nvidia' 
+

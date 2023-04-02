@@ -15,6 +15,7 @@
       gpu: nvidia
       copy_host_user: true
       tty: 2
+      operation: "{{desired_operation}}"
       container_username: "linuxdev"
       host_username: "linuxdev"
 
@@ -35,14 +36,28 @@
       variation: arch-full-install
       username: linuxdev
       components:
-
+        - name: system-boot
         - name: system-setup
           params:
             gpu_driver: nvidia
-        - name: system-boot
+            login_tty: 2
+  tasks:
+    - name:
+      debug:
+        msg: "Done managing container"
+
+- hosts: "{{container_name}}"
+  connection: podman
+  become: yes
+  become_user: root
+  gather_facts: yes
+  roles:
+
+    - role: container
+      container_name: "{{container_name}}"
+      operation: "restart"
 
   tasks:
     - name:
       debug:
-        msg: "Done setting up misc stuff"
-
+        msg: "Done restarting container"

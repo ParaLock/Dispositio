@@ -1,70 +1,58 @@
 - hosts: localhost
-  connection: local
   become: yes
   become_user: root
-  gather_facts: yes
-  roles:
-
-    - role: container
-      container_name: "{{container_name}}"
-      container_config: "../container_configs/archlinux_with_xserver"
-      image_name: archlinux_with_xserver
-      graphics: x-server
-      sound: pipewire
-      nested_containers: false
-      gpu: nvidia
-      copy_host_user: true
-      tty: 2
-      operation: "{{desired_operation}}"
-      container_username: "linuxdev"
-      container_password: "root"
-      host_username: "linuxdev"
-
   tasks:
 
-    - name:
-      meta: refresh_inventory
-      when: desired_operation == 'start'
+    - import_role:
+        name: container
+      vars:
+        container_name: "{{container_name}}"
+        container_config: "../container_configs/archlinux_with_xserver"
+        image_name: archlinux_with_xserver
+        graphics: x-server
+        sound: pipewire
+        nested_containers: false
+        gpu: nvidia
+        copy_host_user: true
+        tty: 2
+        operation: "{{desired_operation}}"
+        container_username: "linuxdev"
+        container_password: "root"
+        host_username: "linuxdev"
 
-    - name:
-      debug:
-        msg: "Done managing container"
 
 - hosts: "{{container_name}}"
   connection: podman
   become: yes
   become_user: root
-  gather_facts: yes
-  roles:
-
-    - role: environment
-      system: linux
-      variation: arch-full-install
-      username: linuxdev
-      password: root
-      components:
-        - name: system-boot
-        - name: system-setup
-          params:
-            gpu_driver: nvidia
-            login_tty: 2
   tasks:
-    - name:
-      debug:
-        msg: "Done managing container"
+
+    - import_role:
+        name: environment
+      vars:
+        system: linux
+        variation: arch-full-install
+        username: linuxdev
+        password: root
+        components:
+          - name: system-boot
+          - name: system-setup
+            params:
+              gpu_driver: nvidia
+              login_tty: 2
+      when: desired_operation not in ['start', 'destroy']
+
 
 - hosts: "{{container_name}}"
   connection: podman
   become: yes
   become_user: root
-  gather_facts: yes
-  roles:
-
-    - role: container
-      container_name: "{{container_name}}"
-      operation: "restart"
-
   tasks:
-    - name:
-      debug:
-        msg: "Done restarting container"
+
+    - import_role:
+        name: container
+      vars:
+        container_name: "{{container_name}}"
+        operation: "restart"
+      when: desired_operation not in ['destroy']
+

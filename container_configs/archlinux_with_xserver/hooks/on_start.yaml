@@ -1,3 +1,12 @@
-- name: Run routine startup tasks
-  shell: |
-    # /env-setup.sh
+- name: Restart host pipewire if we care about pipewire
+  systemd:
+    scope: "user"
+    name: "{{item}}"
+    state: restart
+  with_items:
+    - "pipewire"
+    - "pipewire-pulse"
+    - "wireplumber"
+    
+  delegate_to: localhost
+  when: "'pipewire' in container_vars['sound'] | default('')"

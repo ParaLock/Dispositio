@@ -40,6 +40,15 @@ arguments:
     - label=disable
     - seccomp=unconfined
   volume:
+
+    {% if additional_volumes %}
+    
+    {% for vol_to_mount in additional_volumes %}
+    - "{{vol_to_mount.src}}:{{vol_to_mount.dest}}"
+    {% endfor %}
+
+    {% endif %}
+
     {% if nested_containers %}
     - "/var/run/containers/storage:/var/run/containers/storage"
     - "/var/lib/containers/storage:/var/lib/containers/storage"

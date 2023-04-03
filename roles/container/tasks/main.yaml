@@ -35,6 +35,8 @@
     cap_add: "{{arguments.cap_add}}"
     security_opt: "{{arguments.security_opt}}"
     volume: "{{arguments.volume}}"
+    pids_limit: "-1"
+    ulimit: "host"
     cmd_args: "{{arguments.cmd_args}}"
     disable_recreate: "{{ 
         true if operation in ['start'] else false

@@ -19,6 +19,9 @@
         container_username: "linuxdev"
         container_password: "root"
         host_username: "linuxdev"
+        additional_volumes:
+          - src: "/home/linuxdev/container_drive/"
+            dest: "/container_drive/"
 
 
 - hosts: "{{container_name}}"

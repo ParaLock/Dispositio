@@ -1,7 +1,16 @@
 - name: Get user id 
   include_tasks: "{{common_path}}/playbooks/get-userid.yaml"
 
-- name: Configure mirror list
+- name: Remove lines if they exist
+  lineinfile:
+    path: /etc/pacman.conf
+    state: absent
+    line: "[multilib]"
+  with_items:
+    - "[multilib]"
+    - "Include = /etc/pacman.d/mirrorlist"
+
+- name: Enable multilib support
   blockinfile:
     path: /etc/pacman.conf
     state: present
@@ -9,19 +18,11 @@
       [multilib]
       Include = /etc/pacman.d/mirrorlist
 
+
 - name: Copy mirror list
   copy:
     src: "{{variation_path}}/data/mirrorlist"
     dest: "/etc/pacman.d/mirrorlist"
-
-- name: Copy helper scripts
-  copy:
-    src: "{{variation_path}}/data/{{item}}"
-    dest: "/"
-    mode: '0777'
-  with_items:
-    - env-setup.sh
-    - start-xserver.sh
 
 - name: Setup pacman keyring
   shell: |
@@ -31,14 +32,19 @@
     pacman --noconfirm -S archlinux-keyring
     pacman --noconfirm -S sudo
 
+- name: Check if {{username}}
+  getent:
+    database: passwd
+    key: "{{ username }}"
+  register: user_result
+
 - name: Setup users
   shell: |
     useradd -m -G wheel {{username}}
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
     echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
     sudo usermod -aG audio {{username}}
-  args:
-    creates: /.container_user_created
+  when: user_result is defined and user_result['passwd'] is defined and user_result['passwd'][username] is defined
 
 - name: Setup system as new user
   block:
@@ -80,12 +86,11 @@
       shell: "sudo pacman -S --noconfirm {{packages | join(' ')}}"
       vars:
         packages:
+          - xterm
           - ansible
           - xorg
           - xorg-xinit
-          - xterm
           - xf86-input-evdev
-          - openbox
           - xorg-fonts-misc
           - ttf-dejavu
           - nano
@@ -145,7 +150,6 @@
           - pipewire-pulse
           - pipewire-alsa
 
-
     - name: Start rtkit service
       systemd:
         enabled: true
@@ -179,11 +183,12 @@
       vars:
         packages:
           - nano
-          - steam
           - wget
           - ly
           - xf86-input-evdev
-          - openbox
+
+    - name: Install additional packages
+      shell: "paru -S --noconfirm {{additional_packages | join(' ')}}"
 
     - name: Copy ly config
       become: yes
@@ -222,6 +227,9 @@
       shell: "paru -S --noconfirm {{item}}"
       with_items:
         - nvidia
+        - nvidia-utils
+        - nvidia-settings
+        - lib32-nvidia-utils
 
     - name: find vulkan loader configs
       find:

@@ -1,0 +1,23 @@
+- hosts: "localhost"
+  connection: local
+  become: yes
+  become_user: root
+  tasks:
+
+    - import_role:
+        name: environment
+      vars:
+        system: linux
+        variation: arch-full-install
+        username: linuxdev
+        password: "{{password}}"
+        components:
+          - name: system-boot
+          - name: system-setup
+            params:
+              gpu_driver: nvidia
+              login_tty: 1
+              additional_packages:
+                - i3
+                - chromium
+

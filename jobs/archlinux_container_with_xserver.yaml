@@ -43,6 +43,11 @@
             params:
               gpu_driver: nvidia
               login_tty: 2
+              additional_packages:
+                - steam
+                - openbox
+                - chromium
+
       when: desired_operation not in ['start', 'destroy']
 
 

@@ -82,8 +82,17 @@
         - src: "{{variation_path}}/data/ly.service"
           dest: "/etc/systemd/system/ly.service"
 
+    - name: Install paru packages
+      command: "paru -S --noconfirm {{packages | join(' ')}}"
+      vars:
+        packages:
+          - nano
+          - wget
+          - ly
+          - xf86-input-evdev
+
     - name: Install packages
-      shell: "sudo pacman -S --noconfirm {{packages | join(' ')}}"
+      command: "sudo pacman -S --noconfirm {{packages | join(' ')}}"
       vars:
         packages:
           - xterm
@@ -141,10 +150,9 @@
           - cups
           - samba
           - dosbox
-          - rtkit
-          - alsa
           - alsa-firmware
           - alsa-utils
+          - rtkit
           - wireplumber
           - pipewire
           - pipewire-pulse
@@ -178,17 +186,8 @@
       environment:
         DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{user_id}}/bus"
 
-    - name: Install paru packages
-      shell: "paru -S --noconfirm {{packages | join(' ')}}"
-      vars:
-        packages:
-          - nano
-          - wget
-          - ly
-          - xf86-input-evdev
-
     - name: Install additional packages
-      shell: "paru -S --noconfirm {{additional_packages | join(' ')}}"
+      command: "paru -S --noconfirm {{params['additional_packages'] | join(' ')}}"
 
     - name: Copy ly config
       become: yes

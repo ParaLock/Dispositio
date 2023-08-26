@@ -90,6 +90,7 @@
 
     ansible_become_flags: "-s -H"
     ansible_become_method: "sudo"
+    ansible_python_interpreter: "/usr/bin/python"
     ansible_host: "{{container_name}}"
     ansible_connection: podman
     ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'

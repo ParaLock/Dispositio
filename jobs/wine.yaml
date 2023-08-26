@@ -1,0 +1,52 @@
+- hosts: "localhost"
+  connection: local
+  become: yes
+  become_user: {{username}}
+  tasks:
+
+    - import_role:
+        name: wine
+      vars:
+
+        components_dir: "/home/wine_components/" 
+        prefix_dir: "/home/wine_prefixes/"   
+        # Prefix
+        # my_prefix/component_data/dxvk/cache.bla
+        # my_prefix/component_data/dxvk/config.conf
+        # my_prefix/data/
+
+        component_params:
+          runtime:
+            library_32bit_path: "/lib/"
+            library_64bit_path: "/lib64"
+
+        prefixes:
+
+          misc_gaming:
+
+            execs:
+              steam:
+                exe_path: "c:\Program Files (x86)\Steam\steam.exe"
+            
+            components:
+              wine: "tkg_latest"
+              vkd3d_proton: "master"
+
+            env_vars:
+              - name: "WINE_ADDRESS_AWARE"
+                val: 1
+            dll_overrides:
+              - name: mshtml
+                val: "d"
+              - name: winemenubuilder
+                val: ""
+              - name: test
+                val: "b,n"
+                app: "abc123"
+
+            reg_keys:
+              - key: "abc123"
+                type: "string"
+                val: "aaa"
+
+

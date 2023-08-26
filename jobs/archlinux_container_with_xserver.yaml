@@ -11,7 +11,7 @@
         image_name: archlinux_with_xserver
         graphics: x-server
         sound: pipewire
-        nested_containers: false
+        nested_containers: true
         gpu: nvidia
         copy_host_user: true
         tty: 2
@@ -51,8 +51,8 @@
       when: desired_operation not in ['start', 'destroy']
 
 
-- hosts: "{{container_name}}"
-  connection: podman
+- hosts: "localhost"
+  connection: local
   become: yes
   become_user: root
   tasks:

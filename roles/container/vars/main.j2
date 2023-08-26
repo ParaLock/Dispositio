@@ -36,9 +36,13 @@ arguments:
     - NET_ADMIN
     - NET_RAW
     - CAP_SYS_CHROOT
+    - AUDIT_CONTROL
+    - IPC_LOCK
+    
   security_opt:
     - label=disable
     - seccomp=unconfined
+    - apparmor=unconfined
   volume:
 
     {% if additional_volumes %}

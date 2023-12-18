@@ -31,7 +31,7 @@
 
 - name: Generate executor
   template:
-    src: "{{role_path}}/tasks/component-executor.yaml"
+    src: "{{role_path}}/tasks/executor.yaml"
     dest: "{{executor_path}}"
     mode: 0777
   delegate_to: "localhost"

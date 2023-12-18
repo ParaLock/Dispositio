@@ -8,5 +8,9 @@
 
 # usage
 
---e "run=<prefix name>"
---e "build=wine" --e "variant=wine_tkg" --e "version="
+--e "task=start"  --e "prefix_name=<prefix name>"
+--e "task=stop"   --e "prefix_name=<prefix name>"
+--e "task=create" --e "prefix_name=<prefix name>" --e "prefix_type=<prefix type>"
+--e "task=delete" --e "prefix_name=<prefix name>"
+
+--e "task=build_component" --e "component_name=wine_tkg" --e "version="

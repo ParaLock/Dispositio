@@ -6,11 +6,17 @@
 - Per process dll overrides
 - Support for usage of specific sets of runtime libraries
 
-# usage
+# Dynamics
+1. When prefix created, must store prefix state in file. 
 
---e "task=start"  --e "prefix_name=<prefix name>"
---e "task=stop"   --e "prefix_name=<prefix name>"
---e "task=create" --e "prefix_name=<prefix name>" --e "prefix_type=<prefix type>"
---e "task=delete" --e "prefix_name=<prefix name>"
+# Usage
 
---e "task=build_component" --e "component_name=wine_tkg" --e "version="
+## Prefix operations
+--e "task=start"  --e "prefix=<prefix name>"
+--e "task=exec"   --e "prefix=<prefix name>" --e "exec=steam"
+--e "task=stop"   --e "prefix=<prefix name>"
+--e "task=create" --e "prefix=<prefix name>" --e "prefix_type=<prefix type>"
+--e "task=delete" --e "prefix=<prefix name>"
+
+## Component operations
+--e "task=build_component" --e "component=wine_tkg" --e "variant=perf" --e "name=latest_wine_tkg_build"

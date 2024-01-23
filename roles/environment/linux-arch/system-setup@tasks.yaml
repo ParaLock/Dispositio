@@ -18,7 +18,6 @@
       [multilib]
       Include = /etc/pacman.d/mirrorlist
 
-
 - name: Copy mirror list
   copy:
     src: "{{variation_path}}/data/mirrorlist"

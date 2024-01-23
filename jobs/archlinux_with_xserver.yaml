@@ -7,13 +7,15 @@
     - import_role:
         name: environment
       vars:
-        system: linux
-        variation: arch-full-install
         username: linuxdev
-        password: "{{password}}"
+        password: "{{password}}"        
         components:
-          - name: system-boot
-          - name: system-setup
+          - name: linux-daemon/systemd-daemon
+            type: daemon
+          - name: linux-arch/system-boot
+            type: env
+          - name: linux-arch/system-setup
+            type: env
             params:
               gpu_driver: nvidia
               login_tty: 1

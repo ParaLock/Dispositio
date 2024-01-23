@@ -7,27 +7,51 @@
     - import_role:
         name: wine
       vars:
-        components_dir: "/home/wine_components/" 
+
+        components_dir: "/home/wine_components/"
         prefixes_dir:   "/home/wine_prefixes/"
+
         runtime:
           library_32bit_path: "/lib/"
           library_64bit_path: "/lib64"
+          
+        component_variants:
+          dxvk:
+            debug_build:
+              breadcrumbs: true
+            perf_build:
+              breadcrumbs: false
+              logging: disabled
 
         prefix_types:
+
           misc_gaming:
             execs:
               steam:
                 exe_path: "c:\Program Files (x86)\Steam\steam.exe"
+
             components:
-              - instance: latest_wine_tkg_build
+              - build: latest_wine_tkg_build
                 params:
                   disable_audio: true
-              - instance: latest_vkd3d_proton
+              - build: latest_vkd3d_proton
                 params:
                   spoof_amd_gpu: true
+
+            tools:
+              winetricks:
+                install:
+                  - dotnet48
+                remove:
+                  - mono
+
+            env_var_sets:
+              - nvidia
             env_vars:
               - name: "WINE_ADDRESS_AWARE"
                 val: 1
+
+            dll_override_sets:
             dll_overrides:
               - name: mshtml
                 val: "d"
@@ -36,6 +60,9 @@
               - name: test
                 val: "b,n"
                 app: "abc123"
+            
+            reg_key_sets:
+              - visual_studio
             reg_keys:
               - key: "abc123"
                 type: "string"

@@ -7,7 +7,9 @@
         name: container
       vars:
         container_name: "{{container_name}}"
-        container_config: "../container_configs/archlinux_with_xserver"
+        build_tasks: "../containers/archlinux_with_xserver/build.yaml"
+        create_tasks: "../containers/archlinux_with_xserver/create.yaml"
+        start_tasks: "../containers/archlinux_with_xserver/start.yaml"
         image_name: archlinux_with_xserver
         graphics: x-server
         sound: pipewire
@@ -20,8 +22,8 @@
         container_password: "root"
         host_username: "linuxdev"
         additional_volumes:
-          - src: "/home/linuxdev/container_drive/"
-            dest: "/container_drive/"
+          - src: "/home/linuxdev/host_drive/"
+            dest: "/host_drive/"
 
 
 - hosts: "{{container_name}}"
@@ -29,17 +31,14 @@
   become: yes
   become_user: root
   tasks:
-
     - import_role:
         name: environment
       vars:
-        system: linux
-        variation: arch-full-install
         username: linuxdev
         password: root
         components:
-          - name: system-boot
-          - name: system-setup
+          - name: linux-arch/system-boot
+          - name: linux-arch/system-setup
             params:
               gpu_driver: nvidia
               login_tty: 2
@@ -56,7 +55,6 @@
   become: yes
   become_user: root
   tasks:
-
     - import_role:
         name: container
       vars:

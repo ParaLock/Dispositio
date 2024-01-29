@@ -1,6 +1,0 @@
-- name: Install dxvk
-  block:
-
-- name: Load dxvk
-  block:
-  

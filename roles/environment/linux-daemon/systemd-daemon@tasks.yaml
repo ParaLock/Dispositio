@@ -1,0 +1,59 @@
+- name: Set vars
+  set_fact:
+    kit_path: "/home/{{username}}/disposito_kit"
+
+- name: Create kit directory
+  file:
+    path: "{{kit_path}}"
+    state: directory
+    mode: '0755'
+
+- name: Load vars
+  load_vars:
+    role_path: "{{role_path}}"
+    components: "{{params.components | default({})}}"
+  register: "resolved_components"
+
+- name: Set vars
+  set_fact:
+    components: "{{resolved_components.components}}"
+
+- name: Generating component executor
+  template:
+    src: "{{role_path}}/common/component-executor.yaml"
+    dest: "{{kit_path}}/systemd-daemon-executor.yaml"
+    owner: "{{username}}"
+    mode: 0777
+  vars:
+    components: "{{resolved_components.components}}"
+    type: "standalone"
+    root_path: "{{kit_path}}"
+
+- name: test
+  debug:
+    msg: "{{(role_path ~ '/' ~ item.name) | dirname}}"
+  loop: "{{components}}"
+- name: Copy components
+  copy:
+    src: "{{(role_path ~ '/' ~ item.name) | dirname}}"
+    dest: "{{kit_path}}"
+  loop: "{{components}}"
+
+
+- name: Setup services
+  block:
+    - name: Copy over disposito service
+      template:
+        src: "./data/disposito.service"
+        dest: "/etc/systemd/system/disposito.service"
+        mode: 0777
+
+    - name: start disposito service
+      systemd:
+        enabled: true
+        name: disposito
+        state: started
+
+  become: true
+  become_user: root
+  become_method: sudo

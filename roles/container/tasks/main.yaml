@@ -11,7 +11,7 @@
   when: operation not in ['restart']
 
 - name: Running before build hook
-  include_tasks: "{{container_config}}/hooks/on_build.yaml"
+  include_tasks: "{{build_tasks}}"
   when: operation in ['create', 'build_image']
 
 - name: Build podman image
@@ -44,10 +44,6 @@
     interactive: true
     command: "/usr/sbin/init"
   when: operation in ['create', 'start']
-
-- name: Running on_init hooks
-  include_tasks: "{{container_config}}/hooks/on_init.yaml"
-  when: operation in ['create', 'build_image']
 
 - name: Destroy container
   containers.podman.podman_container:
@@ -127,9 +123,9 @@
   become: true
 
 - name: Running on create hook
-  include_tasks:  "{{container_config}}/hooks/on_create.yaml"
+  include_tasks:  "{{create_tasks}}"
   when: operation in ['create']
 
 - name: Running on start hook
-  include_tasks:  "{{container_config}}/hooks/on_start.yaml"
+  include_tasks:  "{{start_tasks}}"
   when: operation in ['start']

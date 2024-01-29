@@ -1,0 +1,3 @@
+- name: Print
+  ansible.builtin.debug:
+    msg: "Running test1 task"

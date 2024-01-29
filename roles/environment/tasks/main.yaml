@@ -1,11 +1,6 @@
-- name: Set kit directory
+- name: Set directories
   set_fact:
     kit_path: "/home/{{username}}/disposito_kit"
-    executor_path: "{{role_path}}/component-executor-resolved.yaml"
-
-- name: Set more vars
-  set_fact:
-    daemon_components: []
 
 - name: Create kit directory
   file:
@@ -14,32 +9,26 @@
     mode: 0777
     owner: "{{username}}"
 
-- name: Create kit subdirectories
-  file:
-    dest: "{{kit_path}}/{{item}}"
-    state: "directory"
-    mode: 0777
-  with_items:
-    - "daemon"
-    - "helpers"
+- name: Create temporary file
+  tempfile:
+    state: file
+  register: resolved_executor
 
-- name: Generate executor
+- name: Generating component executor
   template:
-    src: "{{role_path}}/tasks/executor.yaml"
-    dest: "{{executor_path}}"
+    src: "{{role_path}}/common/component-executor.yaml"
+    dest: "{{resolved_executor.path}}"
+    owner: "{{username}}"
     mode: 0777
+  vars:
+    type: "tasks_only"
+    root_path: "{{role_path}}"
   delegate_to: "localhost"
 
 - name: Run components
-  include_tasks: "{{executor_path}}"
+  include_tasks: "{{resolved_executor.path}}"
 
-- name: Install daemon components
-  include_tasks: "{{common_path}}/daemon/install-daemon.yaml"
 
-- name: Delete templates
-  file:
-    path: "{{executor_path}}"
-    state: absent
 
 
 

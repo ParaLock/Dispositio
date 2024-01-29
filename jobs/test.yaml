@@ -10,15 +10,6 @@
         username: linuxdev
         password: "{{password}}"
         components:
-          # - name: linux-common/users
-          # - name: linux-arch/system-boot
-          # - name: linux-arch/system-setup
-          #   params:
-          #     gpu_driver: nvidia
-          #     login_tty: 1
-          #     additional_packages:
-          #       - i3
-          #       - chromium
           - name: linux-test/test1
           - name: linux-daemon/systemd-daemon
             params:

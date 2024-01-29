@@ -1,0 +1,13 @@
+- name: Check if {{username}}
+  getent:
+    database: passwd
+    key: "{{ username }}"
+  register: user_result
+
+- name: Setup users
+  shell: |
+    useradd -m -G wheel {{username}}
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+    sudo usermod -aG audio {{username}}
+  when: user_result is defined and user_result['passwd'] is defined and user_result['passwd'][username] is defined

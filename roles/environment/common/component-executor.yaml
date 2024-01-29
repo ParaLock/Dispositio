@@ -1,0 +1,15 @@
+{% if type == 'standalone' %}
+- hosts: "localhost"
+  connection: local
+  tasks:
+{% endif %}
+
+{% for comp in components %}
+
+    - name: "Running {{comp.name}}"
+      include_tasks: "{{root_path}}/{{comp.name}}@tasks.yaml"
+      vars:
+        params: {{ comp.params | default({}) }}
+      ignore_errors: true
+
+{% endfor %}

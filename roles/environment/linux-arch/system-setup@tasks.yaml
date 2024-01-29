@@ -1,5 +1,10 @@
-- name: Get user id 
-  include_tasks: "{{common_path}}/playbooks/get-userid.yaml"
+- name: Get user id
+  shell: id -u {{ username }}
+  register: raw_user_id
+
+- name: Extract user id
+  set_fact: 
+    user_id: "{{raw_user_id.stdout_lines[0]}}"
 
 - name: Remove lines if they exist
   lineinfile:
@@ -20,7 +25,7 @@
 
 - name: Copy mirror list
   copy:
-    src: "{{variation_path}}/data/mirrorlist"
+    src: "{{role_path}}/data/mirrorlist"
     dest: "/etc/pacman.d/mirrorlist"
 
 - name: Setup pacman keyring
@@ -31,19 +36,6 @@
     pacman --noconfirm -S archlinux-keyring
     pacman --noconfirm -S sudo
 
-- name: Check if {{username}}
-  getent:
-    database: passwd
-    key: "{{ username }}"
-  register: user_result
-
-- name: Setup users
-  shell: |
-    useradd -m -G wheel {{username}}
-    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-    echo "{{username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
-    sudo usermod -aG audio {{username}}
-  when: user_result is defined and user_result['passwd'] is defined and user_result['passwd'][username] is defined
 
 - name: Setup system as new user
   block:
@@ -70,15 +62,15 @@
         dest: "{{item.dest}}"
         mode: "0777"
       with_items:
-        - src: "{{variation_path}}/data/xorg.conf"
+        - src: "{{role_path}}/data/xserver/xorg.conf"
           dest: "/etc/X11/xorg.conf"
-        - src: "{{variation_path}}/data/Xwrapper.config"
+        - src: "{{role_path}}/data/xserver/Xwrapper.config"
           dest: "/etc/X11/Xwrapper.config"
-        - src: "{{variation_path}}/data/xinitrc"
+        - src: "{{role_path}}/data/xserver/xinitrc"
           dest: "/etc/X11/xinit/xinitrc"
-        - src: "{{variation_path}}/data/xserverrc"
+        - src: "{{role_path}}/data/xserver/xserverrc"
           dest: "/etc/X11/xinit/xserverrc"
-        - src: "{{variation_path}}/data/ly.service"
+        - src: "{{role_path}}/data/ly/ly.service"
           dest: "/etc/systemd/system/ly.service"
 
     - name: Install paru packages
@@ -192,7 +184,7 @@
       become: yes
       become_user: "root"
       template:
-        src: "{{variation_path}}/data/config.ini"
+        src: "{{role_path}}/data/config.ini"
         dest: "/etc/ly/config.ini"
         mode: "0777"
 
@@ -203,7 +195,7 @@
         src: "{{item.src}}"
         dest: "{{item.dest}}"
       with_items:
-        - src: "{{variation_path}}/data/ly"
+        - src: "{{role_path}}/data/ly"
           dest: "/usr/bin/"
           
     - name: start ly services

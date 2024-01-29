@@ -1,31 +1,83 @@
-- name: Build component path
-  set_fact:
-    comp_path: "{{kit_path}}/daemon/system-boot-daemon.yaml"
+- name: Get user id (raw)
+  shell: id -u {{ username }}
+  register: raw_user_id
 
-- name: Copy required daemon files
-  copy:
-    src: "{{item.src}}"
-    dest: "{{item.dest}}"
-    owner: "{{ username }}"
-    mode: 0777
-  with_items:
-    - src: "./system-boot-daemon.yaml"
-      dest: "{{kit_path}}/daemon/system-boot-daemon.yaml"
-    - src: "../../common/get-userid.yaml"
-      dest: "{{kit_path}}/helpers/get-userid.yaml"
+- name: Get user id
+  set_fact: 
+    user_id: "{{raw_user_id.stdout_lines[0]}}"
 
-- name: Copy required daemon templates
+- name: Generate login service
   template:
-    src: "{{item.src}}"
-    dest: "{{item.dest}}"
-    owner: "{{ username }}"
+    src: "{{kit_path}}/login.service"
+    dest: "/etc/systemd/system/login.service"
     mode: 0777
-  with_items:
-    - src: "{{common_path}}/data/login.service"
-      dest: "{{kit_path}}/login.service"
 
-- name: Register daemon component
-  set_fact:
-    daemon_components: "{{daemon_components + [comp_path]}}"
+- name: Create bash login if it does not exist
+  command: "touch /home/{{username}}/.bash_login"
+  args:
+    creates: /home/{{username}}/.bash_login
+
+- name: Set DBUS path
+  lineinfile:
+    path: /etc/environment
+    line: "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{user_id}}/bus"
+    state: present
+
+- name: Set display variable
+  lineinfile:
+    path: /etc/environment
+    line: "DISPLAY=:0"
+    state: present
+    
+- name: Disable getty
+  systemd:
+    name: getty@{{item}}.service
+    state: stopped
+    masked: true
+  ignore_errors: true
+  with_items:
+    - 1
+    - 2
+    - 3
+    - 4
+
+- name: Disable logind
+  systemd:
+    name: systemd-logind.service 
+    state: stopped
+    masked: true
+
+- name: Start user service
+  systemd:
+    name: "user@{{ user_id }}"
+    state: started
+
+- name: Create bash login if it does not exist
+  command: "touch /home/{{username}}/.bash_login"
+  args:
+    creates: /home/{{username}}/.bash_login
+
+- name: Ensure xhost installed
+  shell: "sudo pacman --noconfirm -S xorg-xhost"
+
+- name: Disable xhost permissions
+  shell: "sudo xhost +"
+
+- name: Perform container specific tasks
+  block:
+
+    - name: Properly mount pipewire
+      shell: |
+        rm -f /run/user/1000/pipewire-0
+        ln -s /mnt/pipewire-0 /run/user/1000/pipewire-0
+      when: "'pipewire' in container_vars['sound'] | default('')"
+
+    - name: Properly mount host xserver
+      shell: |
+        sudo mkdir -p /tmp/.X11-unix/
+        sudo mount --bind /mnt/.X11-unix/ /tmp/.X11-unix/
+      when: "'host-xserver' in container_vars['graphics'] | default('')"
+  when: (container_vars != None)
+
 
 

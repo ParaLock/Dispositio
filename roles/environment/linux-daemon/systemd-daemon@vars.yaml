@@ -1,3 +1,0 @@
-kit_path: {{kit_path}}
-username: {{username}}
-container_vars: {{hostvars[inventory_hostname]['container_vars'] | default(None) }}

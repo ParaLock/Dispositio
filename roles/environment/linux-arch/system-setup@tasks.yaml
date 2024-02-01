@@ -184,7 +184,7 @@
       become: yes
       become_user: "root"
       template:
-        src: "{{role_path}}/data/config.ini"
+        src: "./data/config.ini"
         dest: "/etc/ly/config.ini"
         mode: "0777"
 
@@ -195,7 +195,7 @@
         src: "{{item.src}}"
         dest: "{{item.dest}}"
       with_items:
-        - src: "{{role_path}}/data/ly"
+        - src: "./data/ly"
           dest: "/usr/bin/"
           
     - name: start ly services

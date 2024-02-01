@@ -29,19 +29,15 @@
     type: "standalone"
     root_path: "{{kit_path}}"
 
-- name: test
-  debug:
-    msg: "{{(role_path ~ '/' ~ item.name) | dirname}}"
-  loop: "{{components}}"
 - name: Copy components
   copy:
     src: "{{(role_path ~ '/' ~ item.name) | dirname}}"
     dest: "{{kit_path}}"
   loop: "{{components}}"
 
-
 - name: Setup services
   block:
+  
     - name: Copy over disposito service
       template:
         src: "./data/disposito.service"

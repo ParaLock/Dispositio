@@ -11,7 +11,7 @@ class ActionModule(ActionBase):
         components = self._task.args.get('components', [])
 
         for obj in components:
-        
+
             base_path = obj.get('name')
             params = obj.get('params', {})
 
@@ -22,11 +22,14 @@ class ActionModule(ActionBase):
 
             with open(file_path, 'r') as template_file:
                 template_content = template_file.read()
-
+            
+            if(not template_content.strip()):
+                continue
+            
             rendered_content = self._templar.template(template_content, task_vars)
             
             loaded_vars = yaml.safe_load(rendered_content)
 
             params.update(loaded_vars)
             obj['params'] = params
-        return {"changed": False, "components": components, "test": components}
+        return {"changed": False, "components": components}

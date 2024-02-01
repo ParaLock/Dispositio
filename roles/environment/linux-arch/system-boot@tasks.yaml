@@ -1,3 +1,8 @@
+- name: Set variables
+  set_fact:
+    kit_path: "{{params.kit_path}}"
+    username: "{{params.username}}"
+    
 - name: Get user id (raw)
   shell: id -u {{ username }}
   register: raw_user_id

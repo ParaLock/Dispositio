@@ -15,3 +15,4 @@
             params:
               components:
                 - name: linux-test/test1
+                - name: linux-common/i3

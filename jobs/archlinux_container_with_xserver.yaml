@@ -31,6 +31,7 @@
   become: yes
   become_user: root
   tasks:
+
     - import_role:
         name: environment
       vars:
@@ -47,7 +48,7 @@
                 - openbox
                 - chromium
 
-      when: desired_operation not in ['start', 'destroy']
+      when: desired_operation in ['create']
 
 
 - hosts: "localhost"

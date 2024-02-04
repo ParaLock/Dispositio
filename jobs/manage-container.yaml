@@ -23,6 +23,6 @@
   become: yes
   become_user: root
   tasks:
-    - name: Running (in) container
+    - name: Running (after) container
         include_tasks:  "{{container_vars.hooks[operation].after}}"
       when: "operation in container_vars.hooks and 'after' in container_vars.hooks[operation]"

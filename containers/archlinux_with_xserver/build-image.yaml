@@ -56,4 +56,3 @@
     path: "{{rootfs_path}}"
     state: absent
   ignore_errors: true
-

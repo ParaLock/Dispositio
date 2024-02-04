@@ -7,6 +7,4 @@
     - "pipewire"
     - "pipewire-pulse"
     - "wireplumber"
-    
-  delegate_to: localhost
   when: "'pipewire' in container_vars['sound'] | default('')"

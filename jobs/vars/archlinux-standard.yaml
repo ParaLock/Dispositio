@@ -1,0 +1,24 @@
+environment_vars:
+  # username: linuxdev
+  # password: "{{password}}"
+  # components:
+  #   - name: linux-common/users
+  #   - name: linux-arch/system-setup
+  #     params:
+  #       gpu_driver: nvidia
+  #       login_tty: 1
+  #       additional_packages:
+  #         - i3
+  #         - chromium
+  #   - name: linux-daemon/systemd-daemon
+  #     params:
+  #       components:
+  #         - name: linux-arch/system-boot
+  username: linuxdev
+  password: root
+  components:
+    - name: linux-test/test1
+    - name: linux-daemon/systemd-daemon
+      params:
+        components:
+          - name: linux-test/test1

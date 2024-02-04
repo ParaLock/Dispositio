@@ -1,0 +1,22 @@
+container_vars:
+  container_name: "{{container_name}}"
+  task_hooks:
+    build-image:
+      before: "./build-image.yaml"
+    create:
+      in: "./setup.yaml"
+    start:
+      after: "./prep-host.yaml"
+    
+  image_name: archlinux_with_xserver
+  graphics: x-server
+  sound: pipewire
+  nested_containers: true
+  gpu: nvidia
+  copy_host_user: true
+  tty: 2
+  operation: "{{desired_operation}}"
+  container_username: "linuxdev"
+  container_password: "root"
+  host_username: "linuxdev"
+

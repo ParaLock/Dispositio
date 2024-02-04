@@ -1,0 +1,28 @@
+- hosts: localhost
+  become: yes
+  become_user: root
+  tasks:
+    - name: Running (before) container
+        include_tasks:  "{{container_vars.hooks[operation].before}}"
+      when: "operation in container_vars.hooks and 'before' in container_vars.hooks[operation]"
+
+    - import_role:
+        name: container
+      vars: "{{container_vars | default({}) | combine({'operation': operation}) }}"
+
+- hosts: "{{container_name}}"
+  connection: podman
+  become: yes
+  become_user: root
+  tasks:
+    - name: Running (in) container
+        include_tasks:  "{{container_vars.hooks[operation].in}}"
+      when: "operation in container_vars.hooks and 'in' in container_vars.hooks[operation]"
+
+- hosts: localhost
+  become: yes
+  become_user: root
+  tasks:
+    - name: Running (in) container
+        include_tasks:  "{{container_vars.hooks[operation].after}}"
+      when: "operation in container_vars.hooks and 'after' in container_vars.hooks[operation]"

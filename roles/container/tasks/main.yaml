@@ -10,19 +10,15 @@
   include_vars: "/tmp/vars.yaml"
   when: operation not in ['restart']
 
-- name: Running before build hook
-  include_tasks: "{{build_tasks}}"
-  when: operation in ['create', 'build_image']
-
 - name: Build podman image
   containers.podman.podman_image:
     name: "{{image_name}}"
-    path: "{{container_config}}/files/"
+    path: "{{docker_file}}"
     state: "{{image_state}}"
     build:
       format: docker
       cache: false
-  when: operation in ['create', 'build_image']
+  when: operation in ['create']
 
 - name: Manage container
   containers.podman.podman_container:
@@ -93,39 +89,24 @@
 
   when: operation in ['create', 'start', 'restart']
 
-- name: Copy over host files
-  block:
+- name: Copy over host user files
+  copy:
+    src: "{{item}}"
+    dest: "{{item}}"
+    mode: '0777'
+  when: "'copy_host_user' in vars and operation in ['create']"
+  with_items:
+    - "/etc/group"
+    - "/etc/passwd"
+    - "/etc/shadow"
 
-    - name: Copy over host user files
-      copy:
-        src: "{{item}}"
-        dest: "{{item}}"
-        mode: '0777'
-      when: "'copy_host_user' in vars and operation in ['create']"
-      with_items:
-        - "/etc/group"
-        - "/etc/passwd"
-        - "/etc/shadow"
-
-    - name: Remove host user from host files
-      lineinfile:
-        path: "{{item}}"
-        regexp: "^{{host_username}}.+" 
-        state: absent
-      with_items:
-      - "/etc/group"
-      - "/etc/passwd"
-      - "/etc/shadow"
-      when: "'copy_host_user' in vars and operation in ['create']"
-  
-  delegate_to: "{{container_name}}"
-  become_user: "root"
-  become: true
-
-- name: Running on create hook
-  include_tasks:  "{{create_tasks}}"
-  when: operation in ['create']
-
-- name: Running on start hook
-  include_tasks:  "{{start_tasks}}"
-  when: operation in ['start']
+- name: Remove host user from host files
+  lineinfile:
+    path: "{{item}}"
+    regexp: "^{{host_username}}.+" 
+    state: absent
+  with_items:
+  - "/etc/group"
+  - "/etc/passwd"
+  - "/etc/shadow"
+  when: "'copy_host_user' in vars and operation in ['create']"

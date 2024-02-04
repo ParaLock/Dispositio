@@ -1,0 +1,27 @@
+- name: Setup users
+  shell: |
+    useradd -m -G wheel {{container_username}}
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo "{{container_username}} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+    sudo usermod -aG audio {{container_username}}
+
+- name: Change root password
+  user:
+    name: root
+    password: "{{ container_password | password_hash('sha512') }}"
+
+- name: Change container user password
+  user:
+    name: "{{ container_username }}"
+    password: "{{ container_password | password_hash('sha512') }}"
+
+- import_role:
+    name: environment
+  vars: "{{environment_vars | default({})}}"
+  
+- name: Relax security limits
+  lineinfile:
+    path: /etc/security/limits.conf
+    state: present
+    line: "{{container_username}} - nice - 20"
+

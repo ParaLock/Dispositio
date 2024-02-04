@@ -1,0 +1,8 @@
+- hosts: "localhost"
+  connection: local
+  become: yes
+  become_user: root
+  tasks:
+    - import_role:
+        name: environment
+      vars: "{{environment_vars | default({})}}"

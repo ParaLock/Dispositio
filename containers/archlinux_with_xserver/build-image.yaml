@@ -18,8 +18,8 @@
 
 - name: Enable exec permissions on pacstrap
   copy:
-    src: "{{container_config}}/files/pacstrap"
-    dest: "{{container_config}}/files/pacstrap"
+    src: "./data/pacstrap"
+    dest: "./data/pacstrap"
     mode: a+x
 
 - name: Mount tmpfs
